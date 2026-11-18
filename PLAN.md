@@ -1,0 +1,37 @@
+# Kế Hoạch Triển Khai Việt Hóa & Cài Đặt Mod Probably Stolen
+
+- [x] **Chặng 1: Khảo sát & Phân loại cấu trúc Mod**
+  - [x] 1.1: Phát hiện nguyên nhân MelonLoader không tương thích với bản game chính thức v0.46D (Mono/IMod native)
+  - [x] 1.2: Dọn dẹp và xóa bỏ các bản mod cũ phụ thuộc MelonLoader (ClientDemandHighlight cũ, ExtraPerks, MoreFeatures)
+- [x] **Chặng 2: Việt hóa & Cài đặt bộ Mod gốc chính thức**
+  - [x] 2.1: Việt hóa và cài đặt Bạch Xà Nữ Hóa Nhân Vật (`baishe_all_characters_feminized`)
+  - [x] 2.2: Việt hóa và cài đặt Bạch Xà Gói 18+ (`baishe_r18_pack`)
+  - [x] 2.3: Việt hóa trực tiếp `AutoAppraisal` ("Giá trị thực: ") và `FraudDetection` ("Thực chất: ", "Hàng nhái - Đối chất: ", "Hàng thật - Xác nhận: ")
+- [x] **Chặng 3: Phát triển & Biên dịch 3 Mod IMod Native thuần Việt (Thay thế MelonLoader)**
+  - [x] 3.1: Viết và biên dịch `LotteryForesight` (Dự đoán vé số & tự động cào thưởng)
+  - [x] 3.2: Viết và biên dịch `AlwaysHighlightCustomerDemand` (Soi và làm nổi bật đồ khách cần mua)
+  - [x] 3.3: Viết và biên dịch `PreciseTemperatureControl` (Mở khóa điều khiển nhiệt độ chính xác từng độ C)
+- [x] **Chặng 4: Triển khai cài đặt vào Game & Cấu hình kích hoạt**
+  - [x] 4.1: Cài đặt toàn bộ vào `D:\GameCrack\Probably Stolen\Mods\`
+  - [x] 4.2: Tự động kích hoạt toàn bộ 7 mod trong `SaveFile.es3`
+  - [x] 4.3: Xuất tài liệu hướng dẫn chi tiết cách chơi cho người dùng
+- [x] **Chặng 5: Triển khai Bộ Giải Pháp Nhận Diện Dị Nhân / Ngụy Nhân Siêu Rõ (Augmented Detector)**
+  - [x] 5.1: Thiết kế mã nguồn C# toàn diện với OpenRouter (gắn thẻ tên khách, đổi màu bong bóng thoại, hiển thị biểu tượng cảnh báo trực quan)
+  - [x] 5.2: Tinh chỉnh mã nguồn Bạch Xà (Bai She Anomaly) để hiệu ứng bóng ma glitch dị nhân luôn kích hoạt 100% cực rõ
+  - [x] 5.3: Biên dịch thư viện `AugmentedDetector.dll` & đóng gói `manifest.xml` chuẩn IMod
+  - [x] 5.4: Cài đặt vào `D:\GameCrack\Probably Stolen\Mods\AugmentedDetector\` và cập nhật kích hoạt `SaveFile.es3`
+  - [x] 5.5: Kiểm thử hoàn thiện và bàn giao hướng dẫn cho người dùng
+- [x] **Chặng 6: Khắc phục & Tối ưu hóa Toàn diện Mod Vé Số & Vé Cào (Lottery Foresight Fix)**
+  - [x] 6.1: Phân tích cơ chế và thiết kế mã nguồn mới qua OpenRouter
+  - [x] 6.2: Kiểm duyệt (Verify & Self-audit) mã nguồn C# và biên dịch `LotteryForesight.dll`
+  - [x] 6.3: Cài đặt bản sửa lỗi vào `D:\GameCrack\Probably Stolen\Mods\LotteryForesight\`
+  - [x] 6.4: Kiểm tra và hướng dẫn chi tiết cho người dùng
+- [x] **Chặng 7: Tinh chỉnh Cân bằng Game theo yêu cầu (Chỉ giữ Soi Vé Cào, khôi phục Vé Số gốc)**
+  - [x] 7.1: Gỡ bỏ hoàn toàn can thiệp xổ số độc đắc, đưa vé số quay đêm về 100% cơ chế mặc định của game
+  - [x] 7.2: Giữ tính năng soi trước giải thưởng vé cào trong kho/kệ và hỗ trợ phím Space cào nhanh
+- [x] **Chặng 8: Tối ưu hóa Sắp xếp Kho Đồ (Smart Inventory Sort - Khắc phục khoảng trống thừa)**
+  - [x] 8.1: Ủy quyền và hoàn thiện thuật toán Best-Fit Contact Perimeter
+  - [x] 8.2: Kiểm duyệt (Verify & Self-audit) mã nguồn C# và biên dịch `SmartInventorySort.dll` bằng Roslyn
+  - [x] 8.3: Tạo `manifest.xml` chuẩn IMod có tiếng Việt và khai báo quyền reflection-external
+  - [x] 8.4: Cài đặt vào `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\` và kích hoạt trong `SaveFile.es3`
+  - [x] 8.5: Kiểm thử và xuất báo cáo tổng kết chi tiết cho người dùng

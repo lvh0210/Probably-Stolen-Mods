@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod>
+  <ID>AlwaysHighlightCustomerDemand</ID>
+  <Name>Soi Nhu Cầu Khách Hàng (Customer Demand - Việt Hóa)</Name>
+  <Author>littlebacon / Antigravity (Bản IMod Việt Hóa)</Author>
+  <ModVersion>1.0.0</ModVersion>
+  <Description>Tự động phát hiện và hiển thị nổi bật mọi món đồ mà khách hàng đang có nhu cầu mua khi bạn rê chuột vào bất kỳ kho hay quầy hàng nào, kèm theo % tiền thưởng trả thêm của khách.</Description>
+  <GameVersions>
+    <Version>0.46</Version>
+  </GameVersions>
+  <Assemblies>
+    <Assembly>CustomerDemandHighlight.dll</Assembly>
+  </Assemblies>
+  <Capabilities />
+</Mod>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod>
+  <ID>AugmentedDetector</ID>
+  <Name>Máy Dò Dị Nhân và Ngụy Nhân (Augmented Detector - Việt Hóa)</Name>
+  <Author>Antigravity (Bản IMod Việt Hóa)</Author>
+  <ModVersion>1.0.0</ModVersion>
+  <Description>Tự động nhận diện và phát hiện 100% khách hàng là Dị Nhân Cải Tạo (Augmented) hoặc Kẻ Bị Truy Nã (Wanted). Gắn thẻ tên màu nổi bật [⚠️ DỊ NHÂN CẢI TẠO - BẬC X], đổi màu bong bóng thoại sang đỏ neon rực rỡ, và gắn bảng cảnh báo trên đầu khách.</Description>
+  <GameVersions>
+    <Version>0.46</Version>
+  </GameVersions>
+  <Assemblies>
+    <Assembly>AugmentedDetector.dll</Assembly>
+  </Assemblies>
+  <Capabilities>
+    <Capability>reflection-external</Capability>
+  </Capabilities>
+</Mod>

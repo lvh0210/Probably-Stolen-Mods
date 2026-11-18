@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod>
+  <ID>LotteryForesight</ID>
+  <Name>Soi Vé Cào (Scratcher Foresight - Việt Hóa)</Name>
+  <Author>NyanDoggo / Antigravity (Bản IMod Việt Hóa)</Author>
+  <ModVersion>1.2.0</ModVersion>
+  <Description>Cho phép nhìn thấy trước chính xác kết quả vé cào trúng thưởng kèm số tiền thắng ngay khi rê chuột vào để quyết định mua hay không. Hỗ trợ cào chuột thủ công hoặc bấm phím Space để cào nhanh. Vé số quay thưởng ban đêm được giữ nguyên 100% cân bằng gốc của game.</Description>
+  <GameVersions>
+    <Version>0.46</Version>
+  </GameVersions>
+  <Assemblies>
+    <Assembly>LotteryForesight.dll</Assembly>
+  </Assemblies>
+  <Capabilities>
+    <Capability>reflection-external</Capability>
+  </Capabilities>
+</Mod>

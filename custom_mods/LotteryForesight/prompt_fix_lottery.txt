@@ -1,0 +1,36 @@
+Bạn là chuyên gia lập trình C# Unity và Harmony modding cho game 'Probably Stolen'.
+Hãy sửa chữa và hoàn thiện tệp mã nguồn C# 'LotteryForesightMod.cs' để sửa dứt điểm các lỗi sau:
+
+Lỗi người dùng báo cáo:
+1. "Vé nào cũng báo không trúng dù trúng rồi":
+   - Nguyên nhân: Code cũ kiểm tra tag LOTTERY_IS_WINNING_TAG và item.unitValue. Đối với vé cào mới chưa cào, tag này chưa được bật và unitValue = 0, nên tooltip luôn báo trượt!
+   - Khắc phục: Đọc trực tiếp 3 biểu tượng từ item.GetTagReadonly("SCRATCHER_SYMBOL1").GetInt(), SCRATCHER_SYMBOL2, SCRATCHER_SYMBOL3.
+     Công thức tính thưởng chính xác của game:
+     - Nếu s1 == s2 && s2 == s3: nếu s1 == 1 thưởng 350 credits, ngược lại thưởng 75 credits.
+     - Nếu có 2 biểu tượng trùng nhau: nếu biểu tượng trùng == 1 thưởng 30 credits, ngược lại thưởng 10 credits.
+     - Nếu không trùng: thưởng 0 credits (Trượt).
+     Nếu thưởng > 0: báo "★ [DỰ ĐOÁN] VÉ TRÚNG THƯỞNG! Giải: {thưởng} credits (Click để nhận thưởng)" màu xanh lá.
+     Nếu thưởng == 0: báo "✕ [DỰ ĐOÁN] Vé trượt (Không trúng giải)" màu đỏ.
+   - Đối với Vé số (LOTTERY_TICKET_TAG):
+     - Kiểm tra tag LOTTERY_WINNING_NUMBER_TAG.
+     - Nếu có số trúng (đã quay thưởng): Dùng LotteryHelper.CountMatches và LotteryHelper.GetPrizeForMatches để tính chính xác số trùng và số tiền thưởng.
+     - Nếu chưa quay thưởng: Báo "⏳ [XỔ SỐ KỲ {edition}] Đang chờ mở thưởng ban đêm! ★ [BẢO ĐẢM] Trúng giải Độc Đắc (1.000.000 credits) khi qua đêm!".
+
+2. "Vé cào không cào hay nhận thưởng được":
+   - Nguyên nhân: Code cũ gọi input.RevealAll() trong OpenUI mà không gọi OnScratchComplete, làm input.revealed = true khóa chuột không cào được, và SCRATCHER_STATE không được đánh dấu là 1 nên IsFullyScratched = false không thể nhận thưởng.
+   - Khắc phục:
+     a) Patch ScratcherHelper.TryRedeemPrize (Prefix):
+        Nếu item != null && item.IsTag("SCRATCHER_TAG") && !ScratcherHelper.IsFullyScratched(item):
+        Tự động gọi ScratcherHelper.MarkSymbolScratched(item, 1), (item, 2), (item, 3) để cập nhật đầy đủ trạng thái cào xong, bật LOTTERY_IS_WINNING_TAG và tính tiền unitValue.
+        Như vậy khi người chơi click vào vé trúng trong kho đồ, vé sẽ lập tức nhận tiền (TryRedeemPrize trả về true).
+     b) Patch ScratcherUIManager.OpenUI (Postfix):
+        Gọi OnScratchComplete cho các slot 1, 2, 3 và gọi input.RevealAll() để hiển thị sạch sẽ trực quan.
+     c) Patch ScratcherUIManager.Update (Postfix):
+        Nếu người chơi ấn phím Space hoặc Enter trong lúc mở vé cào, tự động nhận thưởng và đóng giao diện.
+
+3. Tính năng Đảm bảo Trúng Độc Đắc Xổ Số Ban Đêm:
+   - Patch LotteryHelper.DrawWinningNumberWithLuck (Prefix):
+     Nếu items != null && items.Count > 0, lấy dãy số từ items[0].GetTagReadonly("LOTTERY_NUMBER_TAG").GetString(), gán __result = dãy số này và return false.
+     Đảm bảo khi qua đêm vé số của người chơi luôn trúng 6 số độc đắc 1.000.000 credits!
+
+Yêu cầu xuất ra mã nguồn C# thuần, bọc trong try-catch, kiểm tra null đầy đủ.

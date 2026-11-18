@@ -1,0 +1,54 @@
+Bạn là chuyên gia lập trình game C# Unity và Harmony modding cho game 'Probably Stolen'.
+Hãy viết hoàn chỉnh tệp mã nguồn C# 'AugmentedDetectorMod.cs' với các tính năng sau:
+
+1. Kiến trúc:
+- Game: Unity 2021.3.45f2, .NET Framework 4.x / Mono, dùng Harmony (0Harmony.dll), IMod (ModLoader.dll).
+- Kế thừa IMod:
+  public class AugmentedDetectorMod : IMod {
+      public void Init(ModManifest manifest) {}
+      public void OnEnable() {}
+      public void OnDisable() {}
+  }
+
+2. Tính năng Nhận diện Dị Nhân / Ngụy Nhân & Kẻ Truy Nã (Augmented Impostor & Wanted Detector):
+a) Patch DialogUIManager.DisplayClientText:
+- Prefix hoặc Postfix lên DialogUIManager.DisplayClientText(DialogUIManager __instance, Dialogue dialogue).
+- Lấy StoreClient từ PlayerStore.Instance.currentClientInstance.GetClientBlueprint().
+- Nếu client != null và __instance.clientNameTMP != null:
+  - Nếu client.isAug == true:
+    Thêm tiền tố rõ ràng nổi bật màu Neon Red:
+    "<color=#FF0055>[⚠️ DỊ NHÂN CẢI TẠO - BẬC " + client.augTier + "]</color> "
+  - Nếu client.isAug == false:
+    Thêm tiền tố màu xanh lá tươi:
+    "<color=#00FF88>[NGƯỜI THƯỜNG]</color> "
+  - Nếu client.isWanted == true:
+    Thêm tiền tố màu cam cảnh báo:
+    "<color=#FFAA00>[🚨 TRUY NÃ: " + (string.IsNullOrEmpty(client.wantedPosterId) ? "CẤP CAO" : client.wantedPosterId) + "]</color> "
+  - Gán vào __instance.clientNameTMP.text = prefix + client.displayName;
+
+b) Patch DialogUIManager.SetClientBubbleColor:
+- Khi client.isAug == true:
+  - Đổi màu viền/nền bong bóng hội thoại (__instance.clientBubble.backgroundImage.color) sang màu Cyberpunk Neon Crimson rực rỡ (Color(1f, 0.15f, 0.45f, 1f)).
+  - Đổi màu khung tên (__instance.clientNameBubbleImage.color) sang màu đỏ đậm (Color(0.85f, 0.05f, 0.25f, 1f)).
+
+c) Patch StoreClientMono.PlayIdleForCurrentClient & StoreClientMono.Update:
+- Khi khách vào tiệm đứng ở quầy:
+  Lấy blueprint StoreClient.
+  Nếu client != null && client.isAug:
+    Tạo hoặc cập nhật một GameObject con tên "AugTag_Indicator" gắn vào StoreClientMono.Instance.transform.
+    localPosition = new Vector3(0f, 2.6f, 0f).
+    Dùng TextMesh (hoặc SpriteRenderer nếu có, nhưng TextMesh là chuẩn Unity built-in không phụ thuộc external asset):
+    text = "⚠️ [DỊ NHÂN CẢI TẠO]";
+    fontSize = 36;
+    characterSize = 0.06f;
+    color = new Color(1f, 0.1f, 0.3f, 1f);
+    anchor = TextAnchor.MiddleCenter;
+    alignment = TextAlignment.Center;
+    MeshRenderer mr của tagObj được set sortingLayerID = __instance.image.sortingLayerID và sortingOrder = __instance.image.sortingOrder + 20.
+  Nếu client == null hoặc !client.isAug:
+    Nếu tìm thấy con "AugTag_Indicator", ẩn nó đi (SetActive(false)) hoặc Destroy.
+
+d) An toàn & Chống crash (Bulletproof Exception Handling):
+- Mọi hàm Patch đều bọc trong try-catch, kiểm tra null kỹ lưỡng (PlayerStore.Instance, currentClientInstance, GetClientBlueprint(), StoreClientMono.Instance, DialogUIManager.Instance, v.v.).
+
+Chỉ xuất mã nguồn C# hoàn chỉnh, không kèm giải thích thừa, không markdown block thừa.

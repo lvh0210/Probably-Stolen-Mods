@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod>
+  <ID>PreciseTemperatureControl</ID>
+  <Name>Điều Khiển Nhiệt Độ Chính Xác (Precise Temperature Control - Việt Hóa)</Name>
+  <Author>NyanDoggo / Antigravity (Bản IMod Việt Hóa)</Author>
+  <ModVersion>1.0.0</ModVersion>
+  <Description>Mở khóa các nút điều chỉnh nhiệt độ trên bếp nung/đun hóa chất ngay từ đầu. Cho phép tùy chỉnh chính xác từng độ C (Click chuột thường: ±1°C, Shift+Click: ±5°C, Ctrl+Click: ±10°C).</Description>
+  <GameVersions>
+    <Version>0.46</Version>
+  </GameVersions>
+  <Assemblies>
+    <Assembly>PreciseTemperatureControl.dll</Assembly>
+  </Assemblies>
+  <Capabilities>
+    <Capability>reflection-external</Capability>
+  </Capabilities>
+</Mod>

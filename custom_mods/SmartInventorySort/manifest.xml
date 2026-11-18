@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod>
+  <ID>SmartInventorySort</ID>
+  <Name>Sắp Xếp Kho Thông Minh (Smart Inventory Sort - Tối Ưu Diện Tích)</Name>
+  <Author>Antigravity</Author>
+  <ModVersion>1.0.0</ModVersion>
+  <Description>Nâng cấp thuật toán sắp xếp kho đồ: Loại bỏ hoàn toàn các khoảng trống chết (gaps), gom các món đồ khít chặt vào nhau theo thuật toán tiếp xúc viền tối đa (Best-Fit Contact Perimeter). Tự động dồn gọn và bảo toàn các vật phẩm đã ghim hoặc rác bẩn cố định.</Description>
+  <GameVersions>
+    <Version>0.46</Version>
+  </GameVersions>
+  <Assemblies>
+    <Assembly>SmartInventorySort.dll</Assembly>
+  </Assemblies>
+  <Capabilities>
+    <Capability>reflection-external</Capability>
+  </Capabilities>
+</Mod>

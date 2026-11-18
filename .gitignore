@@ -1,0 +1,29 @@
+# Archives & Binaries
+*.7z
+*.zip
+*.rar
+*.tar.gz
+*.dll
+*.exe
+*.pdb
+
+# Workspaces & Extracted Game Dumps
+workspace/
+extracted_texts/
+*.es3
+*.log
+*.tmp
+
+# Temporary test scripts
+test_*
+inspect_*
+run_inspect*
+dump_*
+check_*
+find_*
+
+# OS & Editor
+.vs/
+.idea/
+Thumbs.db
+[Dd]esktop.ini
