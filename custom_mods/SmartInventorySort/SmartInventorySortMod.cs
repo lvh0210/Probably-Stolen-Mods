@@ -85,7 +85,7 @@ public class SmartCategorySortController : MonoBehaviour
     public static SmartCategorySortController Instance;
 
     private bool showMenu = false;
-    private Rect windowRect = new Rect(40, 40, 560, 520);
+    private Rect windowRect = new Rect(40, 40, 580, 530);
     private Vector2 scrollPos;
     private string statusMessage = "Bấm F2 để ẩn/hiện bảng. Bấm F3 để gom và phân loại theo ưu tiên.";
 
@@ -104,7 +104,7 @@ public class SmartCategorySortController : MonoBehaviour
 
     // Cấu hình người dùng: key = Container Identifier
     // -1 = Tự động nhận diện theo tên hòm
-    // 0 = Bỏ qua / Khóa
+    // 0 = Bỏ qua / Khóa (KHÔNG RÚT ĐỒ RA, KHÔNG NHÉT ĐỒ VÀO)
     // 1..7 = Người dùng CHỈ ĐỊNH nhận danh mục cụ thể (Priority 1)
     private Dictionary<string, int> customAssignments = new Dictionary<string, int>();
 
@@ -146,7 +146,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.Space(4);
 
         GUILayout.Label("Cấu hình Hòm Đồ (Click nút để đổi loại đồ nhận hoặc để Tự Động):", EditorStyles_BoldLabel());
-        GUILayout.Label("💡 [⭐ Ưu Tiên] được lấp đầy trước. Khi đầy mới chuyển sang [🤖 Tự Động].", EditorStyles_SmallItalic());
+        GUILayout.Label("💡 [⭐ Ưu Tiên] được lấp đầy trước. Kho bị [⛔ BỎ QUA / KHÓA] tuyệt đối không bị đụng tới.", EditorStyles_SmallItalic());
 
         List<NamedInventory> inventories = GetAvailableInventories();
 
@@ -158,7 +158,7 @@ public class SmartCategorySortController : MonoBehaviour
             // Tên hòm, kích thước và số lượng món hiện tại
             int count = (ni.Inventory.childItems != null) ? ni.Inventory.childItems.Count : 0;
             string labelText = ni.DisplayName + " (" + count + " món)";
-            GUILayout.Label(labelText, GUILayout.Width(240));
+            GUILayout.Label(labelText, GUILayout.Width(250));
 
             // Lấy trạng thái hiện tại của hòm
             string id = ni.Id;
@@ -166,6 +166,11 @@ public class SmartCategorySortController : MonoBehaviour
             if (customAssignments.ContainsKey(id))
             {
                 currentSetting = customAssignments[id];
+            }
+            else if (id == "hidden_stash")
+            {
+                // Kho lậu mặc định luôn là KHÓA (0) để bảo vệ tuyệt đối
+                currentSetting = 0;
             }
 
             // Hiển thị nút bấm với nhãn tương ứng
@@ -179,7 +184,7 @@ public class SmartCategorySortController : MonoBehaviour
             else if (currentSetting == 0)
             {
                 btnText = "⛔ BỎ QUA / KHÓA";
-                GUI.backgroundColor = new Color(0.9f, 0.5f, 0.5f);
+                GUI.backgroundColor = new Color(0.95f, 0.45f, 0.45f);
             }
             else
             {
@@ -188,7 +193,7 @@ public class SmartCategorySortController : MonoBehaviour
             }
 
             // Click nút để xoay vòng cấu hình cho hòm này
-            if (GUILayout.Button(btnText, GUILayout.Width(250), GUILayout.Height(26)))
+            if (GUILayout.Button(btnText, GUILayout.Width(260), GUILayout.Height(26)))
             {
                 // Chu kỳ: -1 (Tự động) -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 0 (Khóa) -> -1 (Tự động)
                 if (currentSetting == -1)
@@ -221,7 +226,7 @@ public class SmartCategorySortController : MonoBehaviour
 
         // Nút nén khít chặt tất cả hòm
         GUI.backgroundColor = new Color(0.4f, 0.7f, 1.0f);
-        if (GUILayout.Button("🧹 SẮP XẾP KHÍT HÒM", GUILayout.Height(36)))
+        if (GUILayout.Button("🧹 SẮP XẾP KHÍT HẾT KHO", GUILayout.Height(36)))
         {
             CompactAllInventories();
         }
@@ -231,13 +236,14 @@ public class SmartCategorySortController : MonoBehaviour
         if (GUILayout.Button("🔄 ĐẶT LẠI TỰ ĐỘNG", GUILayout.Height(36)))
         {
             customAssignments.Clear();
+            customAssignments["hidden_stash"] = 0; // Luôn giữ kho lậu khóa an toàn
             SaveAssignments();
-            statusMessage = "🔄 Đã đặt lại toàn bộ hòm về chế độ Tự Động theo tên/loại!";
+            statusMessage = "🔄 Đã đặt lại toàn bộ hòm về Tự Động (Kho Lậu vẫn được khóa an toàn)!";
         }
 
         // Nút đóng
         GUI.backgroundColor = Color.white;
-        if (GUILayout.Button("ĐÓNG (F2)", GUILayout.Height(36), GUILayout.Width(80)))
+        if (GUILayout.Button("ĐÓNG (F2)", GUILayout.Height(36), GUILayout.Width(75)))
         {
             showMenu = false;
         }
@@ -290,14 +296,21 @@ public class SmartCategorySortController : MonoBehaviour
             foreach (var ni in inventories)
             {
                 int setting = -1;
-                if (customAssignments.TryGetValue(ni.Id, out setting) && setting >= 0)
+                if (!customAssignments.TryGetValue(ni.Id, out setting))
                 {
-                    // Người dùng đã gán thủ công
-                    if (setting >= 1 && setting <= 7)
-                    {
-                        priority1ByCategory[setting].Add(ni.Inventory); // Ưu tiên 1
-                    }
-                    // Nếu setting == 0: Khóa / Bỏ qua, không nhận gì
+                    if (ni.Id == "hidden_stash") setting = 0;
+                    else setting = -1;
+                }
+
+                if (setting == 0)
+                {
+                    // Kho bị KHÓA / BỎ QUA -> TUYỆT ĐỐI KHÔNG NHẬN ĐỒ VÀO!
+                    continue;
+                }
+                else if (setting >= 1 && setting <= 7)
+                {
+                    // Người dùng CHỈ ĐỊNH nhận nhóm này -> Ưu tiên 1
+                    priority1ByCategory[setting].Add(ni.Inventory);
                 }
                 else
                 {
@@ -317,6 +330,20 @@ public class SmartCategorySortController : MonoBehaviour
             {
                 GameGridInventory sourceInv = sourceNI.Inventory;
                 if (sourceInv == null || sourceInv.childItems == null) continue;
+
+                // 🛑 QUAN TRỌNG: NẾU KHO NÀY ĐANG BỊ KHÓA (setting == 0) -> ĐÓNG BĂNG 100%, TUYỆT ĐỐI KHÔNG RÚT ĐỒ RA!
+                int srcSetting = -1;
+                if (!customAssignments.TryGetValue(sourceNI.Id, out srcSetting))
+                {
+                    if (sourceNI.Id == "hidden_stash") srcSetting = 0;
+                    else srcSetting = -1;
+                }
+
+                if (srcSetting == 0)
+                {
+                    // Kho bị khóa: Giữ nguyên 100%, bỏ qua kho này
+                    continue;
+                }
 
                 // Lấy bản sao danh sách item để duyệt an toàn
                 List<GameItem> itemsToProcess = new List<GameItem>(sourceInv.childItems);
@@ -398,9 +425,19 @@ public class SmartCategorySortController : MonoBehaviour
                 }
             }
 
-            // Sau khi phân phối xong, tự động sắp xếp nén khít chặt toàn bộ các hòm
+            // Sau khi phân phối xong, tự động sắp xếp nén khít toàn bộ các kho & hòm (TRỪ CÁC KHO BỊ KHÓA)
             foreach (var ni in inventories)
             {
+                int invSetting = -1;
+                if (!customAssignments.TryGetValue(ni.Id, out invSetting))
+                {
+                    if (ni.Id == "hidden_stash") invSetting = 0;
+                    else invSetting = -1;
+                }
+
+                // Không xáo trộn kho đã bị khóa
+                if (invSetting == 0) continue;
+
                 if (ni.Inventory != null && ni.Inventory.childItems != null && ni.Inventory.childItems.Count > 0)
                 {
                     InventorySortHelper.Sort(ni.Inventory, true, false);
@@ -408,7 +445,7 @@ public class SmartCategorySortController : MonoBehaviour
                 }
             }
 
-            statusMessage = "✅ Đã phân loại & lấp đầy thành công " + totalMoved + " món đồ theo thứ tự ưu tiên!";
+            statusMessage = "✅ Đã phân loại & sắp xếp lại toàn bộ kho! (Đã chuyển " + totalMoved + " món đồ theo ưu tiên)";
             Debug.Log("[SmartCategorySort] " + statusMessage);
         }
         catch (Exception ex)
@@ -426,6 +463,16 @@ public class SmartCategorySortController : MonoBehaviour
             int count = 0;
             foreach (var ni in inventories)
             {
+                int invSetting = -1;
+                if (!customAssignments.TryGetValue(ni.Id, out invSetting))
+                {
+                    if (ni.Id == "hidden_stash") invSetting = 0;
+                    else invSetting = -1;
+                }
+
+                // Không xáo trộn kho đã bị khóa
+                if (invSetting == 0) continue;
+
                 if (ni.Inventory != null && ni.Inventory.childItems != null && ni.Inventory.childItems.Count > 0)
                 {
                     InventorySortHelper.Sort(ni.Inventory, true, false);
@@ -433,7 +480,7 @@ public class SmartCategorySortController : MonoBehaviour
                     count++;
                 }
             }
-            statusMessage = "✅ Đã nén khít chặt " + count + " hòm đồ thành công!";
+            statusMessage = "✅ Đã nén khít chặt toàn bộ " + count + " kho & hòm đồ thành công!";
         }
         catch (Exception ex)
         {
@@ -549,60 +596,70 @@ public class SmartCategorySortController : MonoBehaviour
     }
 
     // =========================================================================
-    // 5. NHẬN DIỆN MẶC ĐỊNH CHO HÒM ĐỒ DỰA VÀO TÊN & TAG CỦA HÒM
+    // 5. NHẬN DIỆN MẶC ĐỊNH CHO HÒM ĐỒ DỰA VÀO TÊN & TAG CỦA HÒM (Xử lý đa ngữ & khoảng trắng)
     // =========================================================================
     public static int DetectDefaultCategory(string containerName, GameItem item = null)
     {
-        string upper = (containerName ?? "").ToUpperInvariant();
+        string upper = (containerName ?? "").ToUpperInvariant().Replace("_", " ");
 
         // 1. Kiểm tra tag của GameItem nếu có
         if (item != null)
         {
             if (item.IsTag("WEAPON") || item.IsTag("AMMUNITION") || item.IsTag("FIREARM")) return 1;
-            if (item.IsTag("MEDICAL") || item.IsTag("NARCOTIC") || item.IsTag("ORGAN")) return 2;
-            if (item.IsTag("FOOD") || item.IsTag("WATER")) return 3;
+            if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("NARCOTIC") || item.IsTag("ORGAN")) return 2;
+            if (item.IsTag("FOOD") || item.IsTag("PROCESSED_FOOD") || item.IsTag("WATER")) return 3;
             if (item.IsTag("ARMOR")) return 4;
             if (item.IsTag("MODULE") || item.IsTag("ENERGY_CELL")) return 5;
             if (item.IsTag("TOOL") || item.IsTag("MATERIAL")) return 6;
             if (item.IsTag("DOCUMENT") || item.IsTag("LUXURY_ITEM") || item.IsTag("ACCESS_CARD")) return 7;
         }
 
-        // 2. Kiểm tra từ khóa trong tên/tiêu đề hòm
-        // Nhóm 2: Y Tế & Dược Phẩm
-        if (upper.Contains("MED") || upper.Contains("FIRSTAID") || upper.Contains("HEALTH") || upper.Contains("ORGAN") ||
-            upper.Contains("PILL") || upper.Contains("Y TẾ") || upper.Contains("THUỐC") || upper.Contains("DƯỢC"))
+        // 2. Nhóm 2: Y Tế & Dược Phẩm
+        if (upper.Contains("FIRST AID") || upper.Contains("FIRSTAID") || upper.Contains("MED") || 
+            upper.Contains("HEALTH") || upper.Contains("ORGAN") || upper.Contains("PILL") || 
+            upper.Contains("Y TẾ") || upper.Contains("THUỐC") || upper.Contains("DƯỢC") || 
+            upper.Contains("SƠ CỨU") || upper.Contains("CỨU THƯƠNG") || upper.Contains("BĂNG GẠC"))
             return 2;
 
         // Nhóm 1: Vũ Khí & Đạn
-        if (upper.Contains("SEC") || upper.Contains("WEAPON") || upper.Contains("GUN") || upper.Contains("AMMO") ||
-            upper.Contains("AN NINH") || upper.Contains("SÚNG") || upper.Contains("ĐẠN") || upper.Contains("VŨ KHÍ"))
+        if (upper.Contains("SEC") || upper.Contains("WEAPON") || upper.Contains("GUN") || 
+            upper.Contains("AMMO") || upper.Contains("MUNITION") || upper.Contains("AN NINH") || 
+            upper.Contains("SÚNG") || upper.Contains("ĐẠN") || upper.Contains("VŨ KHÍ") || 
+            upper.Contains("BẢO MẬT") || upper.Contains("GUNSAFE"))
             return 1;
 
         // Nhóm 3: Thực Phẩm & Nước
-        if (upper.Contains("LUNCH") || upper.Contains("FOOD") || upper.Contains("BEER") || upper.Contains("WATER") ||
-            upper.Contains("FRIDGE") || upper.Contains("THỰC PHẨM") || upper.Contains("HỘP CƠM") || upper.Contains("NƯỚC"))
+        if (upper.Contains("LUNCH") || upper.Contains("FOOD") || upper.Contains("BEER") || 
+            upper.Contains("WATER") || upper.Contains("FRIDGE") || upper.Contains("RATION") || 
+            upper.Contains("THỰC PHẨM") || upper.Contains("HỘP CƠM") || upper.Contains("NƯỚC") || 
+            upper.Contains("ĐỒ ĂN") || upper.Contains("LƯƠNG KHÔ") || upper.Contains("BÁNH"))
             return 3;
 
         // Nhóm 4: Giáp & Trang Bị
-        if (upper.Contains("ARMOR") || upper.Contains("VEST") || upper.Contains("HELMET") || upper.Contains("GIÁP"))
+        if (upper.Contains("ARMOR") || upper.Contains("VEST") || upper.Contains("HELMET") || 
+            upper.Contains("GIÁP") || upper.Contains("MŨ") || upper.Contains("ÁO GIÁP"))
             return 4;
 
         // Nhóm 5: Linh Kiện & Module
-        if (upper.Contains("ENG") || upper.Contains("MODULE") || upper.Contains("ENERGY") || upper.Contains("BATTERY") ||
-            upper.Contains("TECH") || upper.Contains("KỸ THUẬT") || upper.Contains("LINH KIỆN"))
+        if (upper.Contains("ENG") || upper.Contains("MODULE") || upper.Contains("ENERGY") || 
+            upper.Contains("BATTERY") || upper.Contains("TECH") || upper.Contains("KỸ THUẬT") || 
+            upper.Contains("LINH KIỆN") || upper.Contains("PIN") || upper.Contains("MÔ-ĐUN"))
             return 5;
 
         // Nhóm 6: Vật Liệu & Công Cụ
-        if (upper.Contains("TOOL") || upper.Contains("MATERIAL") || upper.Contains("SERVICE") ||
-            upper.Contains("CÔNG CỤ") || upper.Contains("VẬT LIỆU") || upper.Contains("DỤNG CỤ"))
+        if (upper.Contains("TOOL") || upper.Contains("MATERIAL") || upper.Contains("SERVICE") || 
+            upper.Contains("CÔNG CỤ") || upper.Contains("VẬT LIỆU") || upper.Contains("DỤNG CỤ") || 
+            upper.Contains("ĐỒ NGHỀ"))
             return 6;
 
         // Nhóm 7: Tài Liệu & Quý Giá
-        if (upper.Contains("EVIDENCE") || upper.Contains("DOSSIER") || upper.Contains("SAFE") || upper.Contains("DOC") ||
-            upper.Contains("TÀI LIỆU") || upper.Contains("BẰNG CHỨNG") || upper.Contains("KÉT SẮT"))
+        if (upper.Contains("EVIDENCE") || upper.Contains("DOSSIER") || upper.Contains("SAFE") || 
+            upper.Contains("DOC") || upper.Contains("TÀI LIỆU") || upper.Contains("BẰNG CHỨNG") || 
+            upper.Contains("KÉT SẮT") || upper.Contains("QUÝ GIÁ") || upper.Contains("HỒ SƠ") || 
+            upper.Contains("SATCHEL"))
             return 7;
 
-        return 0; // Mặc định: Kho chung
+        return 0; // Mặc định: Kho chung / Bỏ qua
     }
 
     // =========================================================================
@@ -655,6 +712,11 @@ public class SmartCategorySortController : MonoBehaviour
             }
         }
 
+        if (pw.child is GameGridInventory ggiChild && !result.Contains(ggiChild))
+        {
+            result.Add(ggiChild);
+        }
+
         return result;
     }
 
@@ -702,9 +764,12 @@ public class SmartCategorySortController : MonoBehaviour
             AddIfValid(list, seenInvs, "counter_box", "🗄️ Hòm Quầy Thu Ngân", emporium.backInvinvElementCounter, 0);
             AddIfValid(list, seenInvs, "bazar_left", "🏪 Hòm Chợ Trái", emporium.bazarLeftinvElement, 0);
             AddIfValid(list, seenInvs, "afterhour", "🌙 Kho Ngoài Giờ", emporium.afterhourInventory, 0);
+
+            // 🕵️ Kho Lậu / Hòm Ẩn: Mặc định là 0 (Khóa / Bỏ qua) để bảo vệ tuyệt đối hàng lậu
+            AddIfValid(list, seenInvs, "hidden_stash", "🕵️ Kho Lậu / Hòm Ẩn", emporium.hiddenElement, 0);
         }
 
-        // Quét tất cả cửa sổ hòm đang mở (WindowsHandler.current.visibleWindows)
+        // 1. Quét tất cả cửa sổ hòm đang mở (WindowsHandler.current.visibleWindows)
         try
         {
             if (WindowsHandler.current != null && WindowsHandler.current.visibleWindows != null)
@@ -719,7 +784,7 @@ public class SmartCategorySortController : MonoBehaviour
                     string rawName = !string.IsNullOrEmpty(pw.titleString) ? pw.titleString : (parentItem != null ? parentItem.name : "Hòm Mở");
                     int defCat = DetectDefaultCategory(rawName, parentItem);
 
-                    string id = (parentItem != null) ? ("box_" + parentItem.name) : ("win_" + rawName);
+                    string id = (parentItem != null) ? ("box_" + parentItem.name + "_" + parentItem.GetHashCode()) : ("win_" + rawName + "_" + pw.GetHashCode());
 
                     foreach (var ggi in storages)
                     {
@@ -734,26 +799,42 @@ public class SmartCategorySortController : MonoBehaviour
         }
         catch {}
 
-        // Quét các món đồ là container đặt trong kho chính hoặc các kho khác
+        // 2. Quét sâu các món đồ là hòm/túi (containers) đặt trong TẤT CẢ các kho tiệm
         try
         {
-            if (emporium != null && emporium.invElement != null && emporium.invElement.childItems != null)
+            if (emporium != null)
             {
-                foreach (GameItem it in emporium.invElement.childItems)
+                GameGridInventory[] allShopInvs = new GameGridInventory[]
                 {
-                    if (it == null) continue;
-                    List<GameGridInventory> storages = GetInventoriesFromItem(it);
-                    if (storages == null || storages.Count == 0) continue;
+                    emporium.invElement,
+                    emporium.backInvinvElement,
+                    emporium.frontInvinvElement,
+                    emporium.backInvinvElementCounter,
+                    emporium.showcaseElement,
+                    emporium.bazarLeftinvElement,
+                    emporium.afterhourInventory
+                };
 
-                    string id = "itembox_" + it.name;
-                    int defCat = DetectDefaultCategory(it.name, it);
+                foreach (var shopInv in allShopInvs)
+                {
+                    if (shopInv == null || shopInv.childItems == null) continue;
 
-                    foreach (var ggi in storages)
+                    foreach (GameItem it in shopInv.childItems)
                     {
-                        if (ggi != null && !seenInvs.Contains(ggi))
+                        if (it == null) continue;
+                        List<GameGridInventory> storages = GetInventoriesFromItem(it);
+                        if (storages == null || storages.Count == 0) continue;
+
+                        string id = "box_" + it.name + "_" + it.GetHashCode();
+                        int defCat = DetectDefaultCategory(it.name, it);
+
+                        foreach (var ggi in storages)
                         {
-                            string displayName = "💼 " + it.name;
-                            AddIfValid(list, seenInvs, id, displayName, ggi, defCat);
+                            if (ggi != null && !seenInvs.Contains(ggi))
+                            {
+                                string displayName = "💼 " + it.name + " (#" + Math.Abs(it.GetHashCode() % 1000) + ")";
+                                AddIfValid(list, seenInvs, id, displayName, ggi, defCat);
+                            }
                         }
                     }
                 }
@@ -800,13 +881,18 @@ public class SmartCategorySortController : MonoBehaviour
     {
         try
         {
-            string[] knownIds = new string[] { "main_inv", "showcase", "front_box", "back_box", "counter_box", "bazar_left", "afterhour" };
+            string[] knownIds = new string[] { "main_inv", "showcase", "front_box", "back_box", "counter_box", "bazar_left", "afterhour", "hidden_stash" };
             foreach (var id in knownIds)
             {
                 if (PlayerPrefs.HasKey("SmartCategoryPriority_" + id))
                 {
                     customAssignments[id] = PlayerPrefs.GetInt("SmartCategoryPriority_" + id, -1);
                 }
+            }
+            // Kho lậu mặc định luôn là KHÓA (0) nếu chưa có cấu hình
+            if (!customAssignments.ContainsKey("hidden_stash"))
+            {
+                customAssignments["hidden_stash"] = 0;
             }
         }
         catch {}

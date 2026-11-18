@@ -49,3 +49,9 @@
   - [x] 11.3: Xây dựng cơ chế ưu tiên 2 tầng (Hòm chỉ định lấp đầy trước -> Hòm mặc định -> Kho chung)
   - [x] 11.4: Cập nhật giao diện F2 cho phép chọn hòm đích linh hoạt, giữ nguyên các hòm khác
   - [x] 11.5: Biên dịch, cài đặt vào game và đồng bộ Git
+- [x] **Chặng 12: Khắc phục Lỗi Rút Đồ Kho Lậu & Tối Ưu Quét Hòm Trong Kho**
+  - [x] 12.1: Đóng băng 100% kho bị khóa (chặn cả rút đồ ra lẫn nhét đồ vào, thêm Kho Lậu `hidden_stash` mặc định Khóa)
+  - [x] 12.2: Mở rộng quét sâu các hòm đồ đặt trong mọi kho tiệm (`invElement`, `back`, `front`, `counter`, `showcase`)
+  - [x] 12.3: Tối ưu bộ từ khóa nhận diện danh mục đa ngữ (xử lý khoảng trắng, tên tiếng Việt và tiếng Anh)
+  - [x] 12.4: Tích hợp cơ chế nén khít chặt toàn bộ kho tiệm và các hòm đồ sau khi phân phối
+  - [x] 12.5: Biên dịch, cài đặt vào game và đồng bộ Git
