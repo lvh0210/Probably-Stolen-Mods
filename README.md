@@ -6,13 +6,31 @@ Bộ sưu tập mã nguồn các bản mod Native (`IMod`) độc lập, không 
 
 ## 🌟 Danh Sách Các Mod Chính
 
-### 1. 📦 Sắp Xếp & Phân Loại Kho Đa Hòm Thông Minh (`SmartInventorySort` v1.1.0)
+### 1. 📦 Sắp Xếp & Phân Loại Kho Đa Hòm Thông Minh (`SmartInventorySort` v1.2.0)
 * **Thư mục mã nguồn**: [`custom_mods/SmartInventorySort/`](custom_mods/SmartInventorySort/)
 * **Tác giả**: Antigravity
-* **Mục tiêu**: Kết hợp hoàn hảo giữa thuật toán sắp xếp khít chặt không khoảng trống và hệ thống phân loại đồ tự động vào các hòm chứa khác nhau (Vũ khí, Y tế, Thực phẩm...).
+* **Mục tiêu**: Kết hợp hoàn hảo giữa thuật toán sắp xếp khít chặt không khoảng trống và hệ thống phân loại đồ tự động vào các hòm chứa khác nhau (Vũ khí, Y tế, Thực phẩm...) với cơ chế tự nhận diện hòm và ưu tiên lấp đầy 2 tầng.
 
 #### 💡 Các tính năng nổi bật:
-1. **Phân loại theo Tag đầu tiên (First Tag Category Mapping)**:
+1. **Tự động nhận diện hòm đồ thông minh (Auto-Detection Defaults)**:
+   - Tự động quét toàn bộ kho cố định trong tiệm, các cửa sổ hòm đồ đang mở (`PixelWindow` sau khi quẹt thẻ mở khóa như Hòm an ninh `SecLootBox`, Hòm y tế `MedLootBox`, Hòm kỹ thuật `EngLootBox`, Hộp cơm `LunchBox`, Két sắt `Safe`...), và các hộp chứa đồ đặt trong kho.
+   - Tự động nhận diện loại đồ phù hợp với từng hòm theo tên và tag:
+     * 🛡️/⚔️ **Hòm An Ninh / Crate Vũ Khí / Két Sắt**: Tự động nhận diện thành `[🤖 Tự Động: ⚔️ Vũ Khí & Đạn]`
+     * 🏥 **Hòm Y Tế / Hộp Sơ Cứu / First Aid**: Tự động nhận diện thành `[🤖 Tự Động: 💊 Y Tế & Dược Phẩm]`
+     * 🍱 **Hộp Cơm / Tủ Lạnh / Thực Phẩm**: Tự động nhận diện thành `[🤖 Tự Động: 🍞 Thực Phẩm & Nước]`
+     * ⚙️ **Hòm Kỹ Thuật / Engineering / Tech**: Tự động nhận diện thành `[🤖 Tự Động: ⚡ Linh Kiện & Module]`
+     * 🔧 **Hộp Đồ Nghề / Tool Box / Vật Liệu**: Tự động nhận diện thành `[🤖 Tự Động: 🔧 Vật Liệu & Công Cụ]`
+     * 📁 **Cặp Tài Liệu / Evidence Box**: Tự động nhận diện thành `[🤖 Tự Động: 📄 Tài Liệu & Quý Giá]`
+     * 🏢 **Kho Tiệm Chính / Bàn Thao Tác**: Mặc định là `[📦 Kho Chung / Bỏ Qua]`.
+
+2. **Cơ chế lấp đầy ưu tiên 2 tầng (Two-Tier Priority Filling)**:
+   - **Tùy biến chỉ định linh hoạt**: Người chơi có thể bấm `F2` để gán riêng 1 hòm bất kỳ nhận loại đồ mong muốn (chuyển sang trạng thái `[⭐ Ưu Tiên]`). Các hòm khác vẫn giữ nguyên cấu hình cũ hoặc giữ nguyên chế độ `[🤖 Tự Động]`.
+   - **Thứ tự lấp đầy**:
+     * Khi bấm `F3` (hoặc nút Gom đồ), các món đồ sẽ được chuyển và **ưu tiên lấp đầy vào Hòm Chỉ Định (`⭐ Ưu Tiên`) TRƯỚC** cho đến khi hòm đó đầy ních không còn ô trống.
+     * Khi Hòm Chỉ Định đã đầy, các món đồ tiếp theo mới tự động chuyển sang **Hòm Mặc Định (`🤖 Tự Động`)** cho đến khi đầy.
+     * Nếu tất cả đều đầy, đồ giữ an toàn tuyệt đối tại kho nguồn.
+
+3. **Phân loại theo Tag đầu tiên (First Tag Category Mapping)**:
    - Quét danh sách chủng loại `item.GetGameItemType()` của từng món đồ.
    - **Lấy tag đầu tiên (`itemTypes[0]`)** để gán nhóm danh mục chính:
      * ⚔️ **Vũ Khí & Đạn**: `WEAPON`, `FIREARM`, `MELEE_WEAPON`, `AMMUNITION`, `GUN_MOD`...
@@ -22,19 +40,18 @@ Bộ sưu tập mã nguồn các bản mod Native (`IMod`) độc lập, không 
      * ⚡ **Linh Kiện & Module**: `MODULE`, `ENERGY_CELL`, `MACHINE`...
      * 🔧 **Vật Liệu & Công Cụ**: `MATERIAL`, `TOOL`, `CHEMICAL_SUPPLIES`, `FILTER`...
      * 📄 **Tài Liệu & Quý Giá**: `DOCUMENT`, `LUXURY_ITEM`, `ACCESS_CARD`, `ART`...
-2. **Kết hợp 2 phương thức điều khiển tiện lợi**:
+
+4. **Kết hợp 2 phương thức điều khiển tiện lợi**:
    - **Cách 1 - Bảng Menu Trực Quan (Phím `F2`)**: 
-     * Bấm `F2` để mở cửa sổ nổi hiển thị tất cả các hòm đồ/kho trong tiệm (Kho Bàn Chính, Kệ Trưng Bày, Hòm Trước Quầy, Hòm Sau Quầy, Hòm Thu Ngân, Hòm Chợ Trái, Hòm Đang Mở...).
-     * Click vào từng hòm để chọn danh mục đồ muốn chuyển vào.
-     * Cấu hình được lưu tự động (`PlayerPrefs`), những lần chơi sau không cần chọn lại!
+     * Bấm `F2` để mở cửa sổ nổi hiển thị tất cả các hòm đồ trong tiệm (kèm số món hiện có và kích thước hòm).
+     * Click vào từng hòm để đổi loại đồ nhận hoặc để Tự Động. Có nút "🔄 Đặt lại Tự Động" để reset mọi hòm về mặc định.
+     * Cấu hình lưu tự động vào `PlayerPrefs`, chơi lại không cần cấu hình lại!
    - **Cách 2 - Phím Tắt Nhanh (Phím `F3`)**: 
-     * Bấm `F3` bất cứ lúc nào để mod tự động gom đồ từ các kho và phân phối vào đúng các hòm đã gán từ trước, không cần mở menu!
-3. **Cơ chế chống mất đồ & chống tràn hòm an toàn**:
-   - Tự động bỏ qua các món đồ người chơi đã ghim (`IsPinned`) và rác bẩn (`IsDebris`).
-   - Nếu hòm đích đã đầy không thể chứa thêm món đồ, hệ thống sẽ tự động hoàn trả món đồ về lại hòm ban đầu, đảm bảo 100% không bao giờ bị mất đồ.
-4. **Sắp xếp khít chặt (PackFirstFit Hook)**:
-   - Hook Harmony Prefix trả về null tại `InventorySortHelper.PackShelves` để kích hoạt thuật toán lấp đầy từng ô (`PackFirstFit`) gốc của Unity.
-   - Sau khi phân loại, mod tự động chạy nén khít chặt toàn bộ các hòm, loại bỏ sạch khoảng trống chết.
+     * Bấm `F3` bất cứ lúc nào để mod tự động gom đồ từ các kho và phân phối vào đúng các hòm theo thứ tự ưu tiên, không cần mở menu!
+
+5. **Cơ chế bảo toàn an toàn & Nén khít chặt (PackFirstFit Hook)**:
+   - Tự động bỏ qua các món đồ người chơi đã ghim (`IsPinned`), rác bẩn (`IsDebris`), và không nhét các hòm đồ vào trong hòm đồ khác.
+   - Hook Harmony Prefix tại `InventorySortHelper.PackShelves` để kích hoạt thuật toán lấp đầy từng ô (`PackFirstFit`) gốc của Unity, tự động nén khít chặt tất cả các hòm sau khi phân loại.
 
 ---
 

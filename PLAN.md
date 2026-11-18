@@ -43,3 +43,9 @@
   - [x] 10.3: Xây dựng hệ thống kết hợp 2 cách (Bảng Menu giao diện OnGUI phím F2 + Phím tắt thao tác nhanh F3)
   - [x] 10.4: Tích hợp logic gom đồ liên hòm & tự động nén khít chặt bằng SmartInventorySort
   - [x] 10.5: Biên dịch, cài đặt vào game và đồng bộ mã nguồn lên GitHub
+- [x] **Chặng 11: Nâng cấp Tự Động Nhận Diện Hòm & Thứ Tự Ưu Tiên Lấp Đầy**
+  - [x] 11.1: Khảo sát cấu trúc container trong game (hòm an ninh, hòm y tế, hộp cơm, két sắt)
+  - [x] 11.2: Thiết kế bộ nhận diện mặc định thông minh theo tên/tag của hòm
+  - [x] 11.3: Xây dựng cơ chế ưu tiên 2 tầng (Hòm chỉ định lấp đầy trước -> Hòm mặc định -> Kho chung)
+  - [x] 11.4: Cập nhật giao diện F2 cho phép chọn hòm đích linh hoạt, giữ nguyên các hòm khác
+  - [x] 11.5: Biên dịch, cài đặt vào game và đồng bộ Git
