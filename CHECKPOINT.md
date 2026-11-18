@@ -3,17 +3,20 @@
 - **Dự án**: Bộ Mod & Việt Hóa game Probably Stolen (Bản IMod Native)
 - **Thư mục lưu trữ**: `D:\VibeCode\Probably Stolen`
 - **Kho lưu trữ GitHub**: [https://github.com/lvh0210/Probably-Stolen-Mods](https://github.com/lvh0210/Probably-Stolen-Mods)
-- **Trạng thái**: Hoàn tất 100% việc sửa lỗi rút đồ kho lậu bị khóa, quét toàn bộ hòm đồ đặt trong kho, và nén khít chặt toàn diện mọi kho (`SmartInventorySort` v1.2.1).
+- **Trạng thái**: Hoàn tất 100% tối ưu hóa toàn diện, sửa triệt để các lỗi logic ngầm, định danh bền vững và tăng tốc hiệu năng (`SmartInventorySort` v1.3.0).
 
-## Các Khắc Phục & Tính Năng Mới (`SmartInventorySort` v1.2.1):
-1. **Đóng băng 100% kho bị khóa (Bảo vệ Kho Lậu tuyệt đối)**:
-   - Sửa triệt để lỗi kho bị khóa vẫn bị rút đồ ra: Đã bổ sung bộ lọc kiểm tra nguồn, nếu kho ở trạng thái `[⛔ BỎ QUA / KHÓA]` thì **tuyệt đối không rút đồ ra, không nhét đồ vào, và không xáo trộn vị trí**.
-   - Thêm trực tiếp `hiddenElement` vào menu `F2` với tên gọi trực quan **`🕵️ Kho Lậu / Hòm Ẩn`**, mặc định luôn ở chế độ Khóa.
-2. **Quét sâu & nhận diện toàn bộ hòm đặt trong kho**:
-   - Quét qua toàn bộ các kho của tiệm (`invElement`, `back`, `front`, `counter`, `showcase`, `bazar`, `afterhour`) để phát hiện tất cả các hòm/hộp chứa đồ (`FirstAidBox`, `SecLootBox`, `LunchBox`, `Toolbox`...) đặt trên kệ hay bàn.
-   - Xử lý bộ từ khóa nhận diện đa ngữ và khoảng trắng ("First Aid", "Sơ cứu", "An ninh", "Hộp cơm"...), đảm bảo 100% các hòm nhận đúng danh mục tự động.
-3. **Sắp xếp & nén khít chặt toàn diện toàn bộ kho**:
-   - Tự động gom và phân loại đồ vào đúng các hòm theo thứ tự ưu tiên (Hòm chỉ định trước -> Hòm mặc định).
-   - Tự động chạy thuật toán `PackFirstFit` nén khít chặt toàn bộ tất cả các kho và các hòm đồ trong tiệm (trừ các kho bị khóa), dọn dẹp sạch sẽ không còn khoảng trống thừa.
+## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.3.0):
+1. **Định danh hòm bền vững vĩnh viễn (Persistent Container Identification)**:
+   - Thay thế hoàn toàn mã hash động `GetHashCode()` bằng ID chuẩn của game: `item.uniqueId` kết hợp `item.identifier` (ví dụ `box_sec_box_1042`).
+   - Cấu hình gán hòm của người chơi được lưu bền vững qua mọi phiên chơi, save/load hay sang ngày mới mà không bao giờ bị mất hoặc lệch hòm.
+2. **Kiểm tra tính tương thích an toàn trước khi chuyển đồ (`CanContainerAcceptItem`)**:
+   - Tích hợp kiểm tra `destInv.mayInventoryAddItemFunc(item, destInv)` và `IsInsertLocked()`.
+   - Ngăn chặn triệt để tình trạng nhét nhầm đồ ngoại lai vào các hòm chuyên dụng có luật riêng của game (như Hộp sơ cứu chỉ nhận đồ y tế), loại bỏ hoàn toàn các lỗi xung đột logic ngầm.
+3. **Mở rộng bộ tag nhận diện danh mục đa tầng**:
+   - Tích hợp đầy đủ toàn bộ các tag đặc biệt của game (ADV_GUN, MELEE_WEAPON, ORGAN_ITEM, CANNED_FOOD, TACTICAL_EQUIPMENT, NPU_BRAND, TOOLBOX...).
+4. **Hiển thị trực quan nguồn gốc vị trí hòm trong Menu F2**:
+   - Hiển thị rõ hòm đang nằm ở đâu trong tiệm: `[Kho Chính]`, `[Hòm Sau]`, `[Hòm Trước]`, `[Quầy Thu Ngân]`, `[Kệ Kính]`, `[Đang Mở]` kèm mã số cá thể (`#UID`) để người chơi phân biệt các hòm cùng loại cực kỳ dễ dàng.
+5. **Nén khít toàn bộ kho mượt mà không giật lag**:
+   - Tối ưu hóa chu trình nén: phân phối xong sẽ nén gọn gàng toàn bộ kho tiệm và các hòm đồ chỉ trong 1 chu kỳ, loại bỏ hiện tượng khựng giật khung hình.
 
-*Cập nhật mốc tự động: Step 2020 | 2026-11-18 19:48:00*
+*Cập nhật mốc tự động: Step 2060 | 2026-11-18 21:45:00*

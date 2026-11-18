@@ -85,7 +85,7 @@ public class SmartCategorySortController : MonoBehaviour
     public static SmartCategorySortController Instance;
 
     private bool showMenu = false;
-    private Rect windowRect = new Rect(40, 40, 580, 530);
+    private Rect windowRect = new Rect(40, 40, 600, 540);
     private Vector2 scrollPos;
     private string statusMessage = "Bấm F2 để ẩn/hiện bảng. Bấm F3 để gom và phân loại theo ưu tiên.";
 
@@ -102,9 +102,9 @@ public class SmartCategorySortController : MonoBehaviour
         "📄 Tài Liệu & Quý Giá"
     };
 
-    // Cấu hình người dùng: key = Container Identifier
+    // Cấu hình người dùng: key = Persistent Unique Container ID
     // -1 = Tự động nhận diện theo tên hòm
-    // 0 = Bỏ qua / Khóa (KHÔNG RÚT ĐỒ RA, KHÔNG NHÉT ĐỒ VÀO)
+    // 0 = Bỏ qua / Khóa (ĐÓNG BĂNG 100%: KHÔNG RÚT RA, KHÔNG NHÉT VÀO, KHÔNG ĐỔI VỊ TRÍ)
     // 1..7 = Người dùng CHỈ ĐỊNH nhận danh mục cụ thể (Priority 1)
     private Dictionary<string, int> customAssignments = new Dictionary<string, int>();
 
@@ -146,19 +146,19 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.Space(4);
 
         GUILayout.Label("Cấu hình Hòm Đồ (Click nút để đổi loại đồ nhận hoặc để Tự Động):", EditorStyles_BoldLabel());
-        GUILayout.Label("💡 [⭐ Ưu Tiên] được lấp đầy trước. Kho bị [⛔ BỎ QUA / KHÓA] tuyệt đối không bị đụng tới.", EditorStyles_SmallItalic());
+        GUILayout.Label("💡 [⭐ Ưu Tiên] được lấp đầy trước. Kho bị [⛔ BỎ QUA / KHÓA] tuyệt đối được bảo vệ 100%.", EditorStyles_SmallItalic());
 
         List<NamedInventory> inventories = GetAvailableInventories();
 
-        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(300));
+        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(310));
         foreach (var ni in inventories)
         {
             GUILayout.BeginHorizontal("box");
 
-            // Tên hòm, kích thước và số lượng món hiện tại
+            // Tên hòm, vị trí, kích thước và số lượng món hiện tại
             int count = (ni.Inventory.childItems != null) ? ni.Inventory.childItems.Count : 0;
             string labelText = ni.DisplayName + " (" + count + " món)";
-            GUILayout.Label(labelText, GUILayout.Width(250));
+            GUILayout.Label(labelText, GUILayout.Width(270));
 
             // Lấy trạng thái hiện tại của hòm
             string id = ni.Id;
@@ -324,6 +324,7 @@ public class SmartCategorySortController : MonoBehaviour
             }
 
             int totalMoved = 0;
+            HashSet<GameGridInventory> affectedInventories = new HashSet<GameGridInventory>();
 
             // Quét từng kho nguồn
             foreach (var sourceNI in inventories)
@@ -353,7 +354,7 @@ public class SmartCategorySortController : MonoBehaviour
                     if (item == null) continue;
                     // Bỏ qua đồ đã ghim, rác bẩn, hoặc đồ là hòm/túi đựng đồ (không nhét hòm vào trong hòm)
                     if (ItemPinHelper.IsPinned(item) || DebrisHelper.IsDebris(item)) continue;
-                    if (item.contentWindow != null || item.IsTag("CONTAINER") || item.IsTag("POUCH") || item.IsTag("BACKPACK")) continue;
+                    if (item.contentWindow != null || item.IsTag("CONTAINER") || item.IsTag("POUCH") || item.IsTag("BACKPACK") || item.IsTag("LOCKED_CONTAINER_TAG")) continue;
 
                     // Lấy Category Index của món đồ theo TAG ĐẦU TIÊN (Quy tắc người dùng)
                     int itemCat = GetItemCategoryIndex(item);
@@ -380,6 +381,7 @@ public class SmartCategorySortController : MonoBehaviour
                     foreach (var destInv in p1List)
                     {
                         if (destInv == sourceInv) continue;
+                        if (!CanContainerAcceptItem(destInv, item)) continue;
 
                         sourceInv.Expel(item);
                         destInv.UncheckedAccept(item);
@@ -388,6 +390,8 @@ public class SmartCategorySortController : MonoBehaviour
                         {
                             totalMoved++;
                             moved = true;
+                            affectedInventories.Add(destInv);
+                            affectedInventories.Add(sourceInv);
                             break;
                         }
                         else
@@ -404,6 +408,7 @@ public class SmartCategorySortController : MonoBehaviour
                         foreach (var destInv in p2List)
                         {
                             if (destInv == sourceInv) continue;
+                            if (!CanContainerAcceptItem(destInv, item)) continue;
 
                             sourceInv.Expel(item);
                             destInv.UncheckedAccept(item);
@@ -412,6 +417,8 @@ public class SmartCategorySortController : MonoBehaviour
                             {
                                 totalMoved++;
                                 moved = true;
+                                affectedInventories.Add(destInv);
+                                affectedInventories.Add(sourceInv);
                                 break;
                             }
                             else
@@ -489,7 +496,33 @@ public class SmartCategorySortController : MonoBehaviour
     }
 
     // =========================================================================
-    // 4. NHẬN DIỆN DANH MỤC DỰA VÀO TAG ĐẦU TIÊN (Theo yêu cầu người dùng)
+    // 4. KIỂM TRA ĐIỀU KIỆN CHẤP NHẬN CỦA HÒM CHỨA (Tránh lỗi cưỡng ép hòm đặc biệt)
+    // =========================================================================
+    private static bool CanContainerAcceptItem(GameGridInventory destInv, GameItem item)
+    {
+        if (destInv == null || item == null) return false;
+        if (destInv.IsInsertLocked()) return false;
+
+        // Kiểm tra mayInventoryAddItemFunc gốc của game (ví dụ Hộp Sơ Cứu chỉ nhận đồ Y tế)
+        if (destInv.mayInventoryAddItemFunc != null)
+        {
+            try
+            {
+                if (!destInv.mayInventoryAddItemFunc(item, destInv))
+                {
+                    return false;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // =========================================================================
+    // 5. NHẬN DIỆN DANH MỤC DỰA VÀO TAG ĐẦU TIÊN (Theo yêu cầu người dùng)
     // =========================================================================
     public static int GetItemCategoryIndex(GameItem item)
     {
@@ -505,19 +538,19 @@ public class SmartCategorySortController : MonoBehaviour
         }
 
         // 2. Fallback kiểm tra các tag phổ biến của game
-        if (item.IsTag("WEAPON") || item.IsTag("FIREARM") || item.IsTag("MELEE_WEAPON") || item.IsTag("AMMUNITION") || item.IsTag("GUN_MOD"))
+        if (item.IsTag("WEAPON") || item.IsTag("FIREARM") || item.IsTag("MELEE_WEAPON") || item.IsTag("AMMUNITION") || item.IsTag("GUN_MOD") || item.IsTag("ADV_GUN_TAG") || item.IsTag("AMMO_BOX_TAG"))
             return 1;
-        if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("NARCOTIC") || item.IsTag("POISON") || item.IsTag("ORGAN"))
+        if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("NARCOTIC") || item.IsTag("POISON") || item.IsTag("ORGAN") || item.IsTag("ORGAN_ITEM_TAG") || item.IsTag("HUMAN_ORGAN_TAG"))
             return 2;
-        if (item.IsTag("FOOD") || item.IsTag("PROCESSED_FOOD") || item.IsTag("WATER") || item.IsTag("ALCOHOL") || item.IsTag("BREVAGE"))
+        if (item.IsTag("FOOD") || item.IsTag("PROCESSED_FOOD") || item.IsTag("WATER") || item.IsTag("ALCOHOL") || item.IsTag("BREVAGE") || item.IsTag("MEAT_FOOD_TAG") || item.IsTag("FRESH_FOOD_TAG") || item.IsTag("CANNED_FOOD_TAG"))
             return 3;
-        if (item.IsTag("ARMOR"))
+        if (item.IsTag("ARMOR") || item.IsTag("TACTICAL_EQUIPMENT_TAG") || item.IsTag("ARMORED"))
             return 4;
-        if (item.IsTag("MODULE") || item.IsTag("ENERGY_CELL"))
+        if (item.IsTag("MODULE") || item.IsTag("MODULE_TAG") || item.IsTag("ENERGY_CELL") || item.IsTag("HYPERTECH_BATTERY_TAG") || item.IsTag("NPU_BRAND_TAG") || item.IsTag("DNA_DISK_TAG"))
             return 5;
-        if (item.IsTag("MATERIAL") || item.IsTag("TOOL") || item.IsTag("CHEMICAL_SUPPLIES"))
+        if (item.IsTag("MATERIAL") || item.IsTag("MATERIAL_TAG") || item.IsTag("BASIC_MATERIAL") || item.IsTag("TOOL") || item.IsTag("TOOLBOX_TAG") || item.IsTag("CHEMICAL_SUPPLIES"))
             return 6;
-        if (item.IsTag("DOCUMENT") || item.IsTag("LUXURY_ITEM") || item.IsTag("ACCESS_CARD") || item.IsTag("ART"))
+        if (item.IsTag("DOCUMENT") || item.IsTag("LUXURY_ITEM") || item.IsTag("ACCESS_CARD") || item.IsTag("ART") || item.IsTag("LOTTERY_TICKET_TAG") || item.IsTag("GEMSTONE_TAG") || item.IsTag("BOOK_TAG"))
             return 7;
 
         return 0; // Kho chung / Bỏ qua
@@ -535,6 +568,10 @@ public class SmartCategorySortController : MonoBehaviour
             case "GUN_MOD":
             case "GRENADE":
             case "EXPLOSIVE":
+            case "ADV_GUN_TAG":
+            case "AMMO_BOX_TAG":
+            case "ARMOR_PIERCING_AMMO":
+            case "SERVICE_GUN_TAG":
                 return 1; // ⚔️ Vũ Khí & Đạn
 
             case "MEDICAL":
@@ -542,8 +579,13 @@ public class SmartCategorySortController : MonoBehaviour
             case "NARCOTIC":
             case "POISON":
             case "ORGAN":
+            case "ORGAN_ITEM_TAG":
+            case "HUMAN_ORGAN_TAG":
             case "DRUG":
             case "CHEMICAL":
+            case "ITEM_MEDICAL_TAG":
+            case "INS_INJECTOR_TAG":
+            case "BIO_PRINTABLE_TAG":
                 return 2; // 💊 Y Tế & Dược Phẩm
 
             case "FOOD":
@@ -554,27 +596,49 @@ public class SmartCategorySortController : MonoBehaviour
             case "ALCOHOL":
             case "BREVAGE":
             case "DRINK":
+            case "MEAT_FOOD_TAG":
+            case "FRESH_FOOD_TAG":
+            case "CANNED_FOOD_TAG":
+            case "BERRY_TAG":
+            case "PLANT_EDIBLE_PRODUCE_TAG":
                 return 3; // 🍞 Thực Phẩm & Nước
 
             case "ARMOR":
             case "HELMET":
             case "VEST":
             case "EQUIPMENT":
+            case "TACTICAL_EQUIPMENT_TAG":
+            case "ARMORED":
+            case "HAND_ADDON_ARMORED":
                 return 4; // 🛡️ Giáp & Trang Bị
 
             case "MODULE":
+            case "MODULE_TAG":
+            case "SHIP_MODULE_TAG":
             case "HYDROPONIC_MODULE":
             case "EVAPORATOR_MODULE":
             case "PRINTER_MODULE":
             case "ALARM_MODULE":
             case "ENERGY_CELL":
             case "BATTERY":
+            case "HYPERTECH_BATTERY_TAG":
             case "ELECTRONIC":
+            case "NPU_BRAND_TAG":
+            case "PRINTER_CHIP_TAG":
+            case "DNA_DISK_TAG":
+            case "NAV_DISK_TAG":
                 return 5; // ⚡ Linh Kiện & Module
 
             case "MATERIAL":
+            case "MATERIAL_TAG":
             case "BASIC_MATERIAL":
+            case "REFINED_MATERIAL":
             case "TOOL":
+            case "TOOLBOX_TAG":
+            case "SALVAGE_TOOL_TAG":
+            case "CONSTRUCTION_MATERIAL_TAG":
+            case "PRINTER_MATERIAL_TAG":
+            case "ORE_TAG":
             case "CHEMICAL_SUPPLIES":
             case "FILTER":
             case "SEED":
@@ -588,6 +652,13 @@ public class SmartCategorySortController : MonoBehaviour
             case "MONEY":
             case "VALUABLE":
             case "KEY":
+            case "LOTTERY_TICKET_TAG":
+            case "GEMSTONE_TAG":
+            case "BOOK_TAG":
+            case "CASSETTE_TAG":
+            case "PERMIT_ITEM_TAG":
+            case "TUTORIAL_PAPER_TAG":
+            case "GUIDE_PAPER_TAG":
                 return 7; // 📄 Tài Liệu & Quý Giá
 
             default:
@@ -596,7 +667,7 @@ public class SmartCategorySortController : MonoBehaviour
     }
 
     // =========================================================================
-    // 5. NHẬN DIỆN MẶC ĐỊNH CHO HÒM ĐỒ DỰA VÀO TÊN & TAG CỦA HÒM (Xử lý đa ngữ & khoảng trắng)
+    // 6. NHẬN DIỆN MẶC ĐỊNH CHO HÒM ĐỒ DỰA VÀO TÊN & TAG CỦA HÒM (Xử lý đa ngữ & khoảng trắng)
     // =========================================================================
     public static int DetectDefaultCategory(string containerName, GameItem item = null)
     {
@@ -609,7 +680,7 @@ public class SmartCategorySortController : MonoBehaviour
             if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("NARCOTIC") || item.IsTag("ORGAN")) return 2;
             if (item.IsTag("FOOD") || item.IsTag("PROCESSED_FOOD") || item.IsTag("WATER")) return 3;
             if (item.IsTag("ARMOR")) return 4;
-            if (item.IsTag("MODULE") || item.IsTag("ENERGY_CELL")) return 5;
+            if (item.IsTag("MODULE") || item.IsTag("MODULE_TAG") || item.IsTag("ENERGY_CELL")) return 5;
             if (item.IsTag("TOOL") || item.IsTag("MATERIAL")) return 6;
             if (item.IsTag("DOCUMENT") || item.IsTag("LUXURY_ITEM") || item.IsTag("ACCESS_CARD")) return 7;
         }
@@ -663,7 +734,7 @@ public class SmartCategorySortController : MonoBehaviour
     }
 
     // =========================================================================
-    // 6. TRUY XUẤT TOÀN BỘ CÁC HÒM ĐỒ TRONG TIỆM / CỬA SỔ / HÒM TRONG KHO
+    // 7. TRUY XUẤT TOÀN BỘ CÁC HÒM ĐỒ TRONG TIỆM / CỬA SỔ / HÒM TRONG KHO
     // =========================================================================
     public struct NamedInventory
     {
@@ -749,6 +820,21 @@ public class SmartCategorySortController : MonoBehaviour
         return result;
     }
 
+    // Tạo Persistent ID bền vững dựa trên uniqueId và identifier của item
+    private static string GetContainerPersistentId(GameItem item, string fallbackName)
+    {
+        if (item != null)
+        {
+            string baseId = !string.IsNullOrEmpty(item.identifier) ? item.identifier : item.name;
+            if (item.uniqueId > 0)
+            {
+                return "box_" + baseId + "_" + item.uniqueId;
+            }
+            return "box_" + baseId + "_" + Math.Abs(item.GetHashCode() % 10000);
+        }
+        return "win_" + (fallbackName ?? "container");
+    }
+
     private List<NamedInventory> GetAvailableInventories()
     {
         List<NamedInventory> list = new List<NamedInventory>();
@@ -784,13 +870,13 @@ public class SmartCategorySortController : MonoBehaviour
                     string rawName = !string.IsNullOrEmpty(pw.titleString) ? pw.titleString : (parentItem != null ? parentItem.name : "Hòm Mở");
                     int defCat = DetectDefaultCategory(rawName, parentItem);
 
-                    string id = (parentItem != null) ? ("box_" + parentItem.name + "_" + parentItem.GetHashCode()) : ("win_" + rawName + "_" + pw.GetHashCode());
+                    string id = GetContainerPersistentId(parentItem, rawName);
 
                     foreach (var ggi in storages)
                     {
                         if (ggi != null && !seenInvs.Contains(ggi))
                         {
-                            string displayName = "🔓 " + rawName;
+                            string displayName = "🔓 " + rawName + " [Đang Mở]";
                             AddIfValid(list, seenInvs, id, displayName, ggi, defCat);
                         }
                     }
@@ -804,35 +890,36 @@ public class SmartCategorySortController : MonoBehaviour
         {
             if (emporium != null)
             {
-                GameGridInventory[] allShopInvs = new GameGridInventory[]
+                var shopInvSources = new (GameGridInventory inv, string locationName)[]
                 {
-                    emporium.invElement,
-                    emporium.backInvinvElement,
-                    emporium.frontInvinvElement,
-                    emporium.backInvinvElementCounter,
-                    emporium.showcaseElement,
-                    emporium.bazarLeftinvElement,
-                    emporium.afterhourInventory
+                    (emporium.invElement, "Kho Chính"),
+                    (emporium.backInvinvElement, "Hòm Sau"),
+                    (emporium.frontInvinvElement, "Hòm Trước"),
+                    (emporium.backInvinvElementCounter, "Quầy Thu Ngân"),
+                    (emporium.showcaseElement, "Kệ Kính"),
+                    (emporium.bazarLeftinvElement, "Chợ Trái"),
+                    (emporium.afterhourInventory, "Ngoài Giờ")
                 };
 
-                foreach (var shopInv in allShopInvs)
+                foreach (var source in shopInvSources)
                 {
-                    if (shopInv == null || shopInv.childItems == null) continue;
+                    if (source.inv == null || source.inv.childItems == null) continue;
 
-                    foreach (GameItem it in shopInv.childItems)
+                    foreach (GameItem it in source.inv.childItems)
                     {
                         if (it == null) continue;
                         List<GameGridInventory> storages = GetInventoriesFromItem(it);
                         if (storages == null || storages.Count == 0) continue;
 
-                        string id = "box_" + it.name + "_" + it.GetHashCode();
+                        string id = GetContainerPersistentId(it, it.name);
                         int defCat = DetectDefaultCategory(it.name, it);
 
                         foreach (var ggi in storages)
                         {
                             if (ggi != null && !seenInvs.Contains(ggi))
                             {
-                                string displayName = "💼 " + it.name + " (#" + Math.Abs(it.GetHashCode() % 1000) + ")";
+                                int shortUid = (it.uniqueId > 0) ? it.uniqueId : Math.Abs(it.GetHashCode() % 1000);
+                                string displayName = "💼 " + it.name + " (#" + shortUid + ") [" + source.locationName + "]";
                                 AddIfValid(list, seenInvs, id, displayName, ggi, defCat);
                             }
                         }
@@ -862,7 +949,7 @@ public class SmartCategorySortController : MonoBehaviour
     }
 
     // =========================================================================
-    // 7. LƯU & TẢI CẤU HÌNH GÁN HÒM (PERSISTENCE)
+    // 8. LƯU & TẢI CẤU HÌNH GÁN HÒM (PERSISTENCE)
     // =========================================================================
     private void SaveAssignments()
     {

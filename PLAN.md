@@ -55,3 +55,9 @@
   - [x] 12.3: Tối ưu bộ từ khóa nhận diện danh mục đa ngữ (xử lý khoảng trắng, tên tiếng Việt và tiếng Anh)
   - [x] 12.4: Tích hợp cơ chế nén khít chặt toàn bộ kho tiệm và các hòm đồ sau khi phân phối
   - [x] 12.5: Biên dịch, cài đặt vào game và đồng bộ Git
+- [x] **Chặng 13: Tối Ưu Hóa & Chuẩn Hóa Kiến Trúc Chống Lỗi Triệt Để (v1.3.0)**
+  - [x] 13.1: Thay thế ID động `GetHashCode()` bằng Persistent ID dựa trên `item.uniqueId` & `item.identifier`
+  - [x] 13.2: Tích hợp hàm kiểm tra tương thích `CanContainerAcceptItem` (`mayInventoryAddItemFunc`)
+  - [x] 13.3: Mở rộng đầy đủ bộ tag nhận diện (vũ khí, y tế, thực phẩm, linh kiện, công cụ, trang bị, tài liệu)
+  - [x] 13.4: Hiển thị nguồn gốc vị trí hòm trên menu F2 (`[Kho Chính]`, `[Hòm Sau]`, `[Kệ Kính]`, `[Đang Mở]`)
+  - [x] 13.5: Biên dịch, cài đặt vào game và đồng bộ Git
