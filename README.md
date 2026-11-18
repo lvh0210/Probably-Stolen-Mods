@@ -6,31 +6,42 @@ Bộ sưu tập mã nguồn các bản mod Native (`IMod`) độc lập, không 
 
 ## 🌟 Danh Sách Các Mod Chính
 
-### 1. 📦 Sắp Xếp Kho Thông Minh (`SmartInventorySort`)
+### 1. 📦 Sắp Xếp & Phân Loại Kho Đa Hòm Thông Minh (`SmartInventorySort` v1.1.0)
 * **Thư mục mã nguồn**: [`custom_mods/SmartInventorySort/`](custom_mods/SmartInventorySort/)
 * **Tác giả**: Antigravity
-* **Mục tiêu**: Khắc phục triệt để vấn đề thuật toán sắp xếp kho mặc định của game để lại quá nhiều khoảng trống chết (gaps), tối ưu hóa diện tích cho cả kho hàng, kệ trưng bày và túi ba lô (`TechnicianBackpack`).
+* **Mục tiêu**: Kết hợp hoàn hảo giữa thuật toán sắp xếp khít chặt không khoảng trống và hệ thống phân loại đồ tự động vào các hòm chứa khác nhau (Vũ khí, Y tế, Thực phẩm...).
 
-#### 🔬 Phân tích nguyên nhân lỗi trong game gốc (Root Cause):
-* Thuật toán gốc của game trong `InventorySortHelper.Sort` mặc định ưu tiên gọi `InventorySortHelper.PackShelves`.
-* `PackShelves` phân kho thành các hàng "kệ" (shelves) ngang cố định. Chiều cao của mỗi kệ bị khóa cứng theo **món đồ cao nhất** trên hàng đó.
-* Ví dụ: Trên cùng một hàng nếu có 1 món cao 3 ô và 1 món cao 1 ô, **2 ô trống phía trên món cao 1 ô sẽ bị bỏ phí vĩnh viễn**, game không bao giờ lấp đầy chúng, dẫn tới tình trạng người chơi bấm sắp xếp xong thì kho vẫn có nhiều lỗ hổng lớn lắt nhắt.
-
-#### 💡 Giải pháp kỹ thuật (Technical Solution):
-* **Harmony Prefix Hook**: Hook trực tiếp vào `InventorySortHelper.PackShelves` và thiết lập `__result = null; return false;`.
-* **Kích hoạt tự động `PackFirstFit`**: Khi `PackShelves` trả về null, engine gốc của game sẽ ngay lập tức chuyển sang thuật toán quét từng ô (`PackFirstFit`).
-* **Ưu điểm vượt trội**:
-  - `PackFirstFit` quét từng tọa độ `(x, y)` theo thứ tự, tự động chèn các món đồ nhỏ (1x1, 1x2...) vào bất kỳ góc cạnh hoặc lỗ hổng còn trống nào.
-  - Sử dụng 100% logic va chạm chuẩn (`FitsOccupancy` + `CheckShapePlacement`) của Unity engine, đảm bảo không bao giờ bị đè chồng item hoặc dồn cục vào góc.
-  - Bảo toàn trọn vẹn các vật phẩm đã ghim (`ItemPinHelper.IsPinned`) và rác bẩn trong kho (`DebrisHelper.IsDebris`).
-  - Hỗ trợ hoàn hảo tính năng Hoàn tác (`Undo`) gốc của game.
+#### 💡 Các tính năng nổi bật:
+1. **Phân loại theo Tag đầu tiên (First Tag Category Mapping)**:
+   - Quét danh sách chủng loại `item.GetGameItemType()` của từng món đồ.
+   - **Lấy tag đầu tiên (`itemTypes[0]`)** để gán nhóm danh mục chính:
+     * ⚔️ **Vũ Khí & Đạn**: `WEAPON`, `FIREARM`, `MELEE_WEAPON`, `AMMUNITION`, `GUN_MOD`...
+     * 💊 **Y Tế & Dược Phẩm**: `MEDICAL`, `MEDICAL_TOOL`, `NARCOTIC`, `POISON`, `ORGAN`...
+     * 🍞 **Thực Phẩm & Nước**: `FOOD`, `PROCESSED_FOOD`, `WATER`, `ALCOHOL`, `TREAT`...
+     * 🛡️ **Giáp & Trang Bị**: `ARMOR`...
+     * ⚡ **Linh Kiện & Module**: `MODULE`, `ENERGY_CELL`, `MACHINE`...
+     * 🔧 **Vật Liệu & Công Cụ**: `MATERIAL`, `TOOL`, `CHEMICAL_SUPPLIES`, `FILTER`...
+     * 📄 **Tài Liệu & Quý Giá**: `DOCUMENT`, `LUXURY_ITEM`, `ACCESS_CARD`, `ART`...
+2. **Kết hợp 2 phương thức điều khiển tiện lợi**:
+   - **Cách 1 - Bảng Menu Trực Quan (Phím `F2`)**: 
+     * Bấm `F2` để mở cửa sổ nổi hiển thị tất cả các hòm đồ/kho trong tiệm (Kho Bàn Chính, Kệ Trưng Bày, Hòm Trước Quầy, Hòm Sau Quầy, Hòm Thu Ngân, Hòm Chợ Trái, Hòm Đang Mở...).
+     * Click vào từng hòm để chọn danh mục đồ muốn chuyển vào.
+     * Cấu hình được lưu tự động (`PlayerPrefs`), những lần chơi sau không cần chọn lại!
+   - **Cách 2 - Phím Tắt Nhanh (Phím `F3`)**: 
+     * Bấm `F3` bất cứ lúc nào để mod tự động gom đồ từ các kho và phân phối vào đúng các hòm đã gán từ trước, không cần mở menu!
+3. **Cơ chế chống mất đồ & chống tràn hòm an toàn**:
+   - Tự động bỏ qua các món đồ người chơi đã ghim (`IsPinned`) và rác bẩn (`IsDebris`).
+   - Nếu hòm đích đã đầy không thể chứa thêm món đồ, hệ thống sẽ tự động hoàn trả món đồ về lại hòm ban đầu, đảm bảo 100% không bao giờ bị mất đồ.
+4. **Sắp xếp khít chặt (PackFirstFit Hook)**:
+   - Hook Harmony Prefix trả về null tại `InventorySortHelper.PackShelves` để kích hoạt thuật toán lấp đầy từng ô (`PackFirstFit`) gốc của Unity.
+   - Sau khi phân loại, mod tự động chạy nén khít chặt toàn bộ các hòm, loại bỏ sạch khoảng trống chết.
 
 ---
 
 ### 2. 👁️ Máy Dò Dị Nhân & Ngụy Nhân (`AugmentedDetector`)
 * **Thư mục mã nguồn**: [`custom_mods/AugmentedDetector/`](custom_mods/AugmentedDetector/)
 * **Tác giả**: Antigravity
-* **Mục tiêu**: Nhận diện tức thì khách hàng là Dị Nhân Cải Tạo (Augmented / Anomaly) hoặc Kẻ Đang Bị Truy Nã (Wanted Poster Target), giúp người chơi không bao giờ bị bỏ lỡ hoặc chọn nhầm phương án đối thoại.
+* **Mục tiêu**: Nhận diện tức thì khách hàng là Dị Nhân Cải Tạo (Augmented / Anomaly) hoặc Kẻ Đang Bị Truy Nã (Wanted Poster Target).
 
 #### 💡 Các cơ chế hiển thị trực quan 3 tầng:
 1. **Thẻ tên trực quan trên khung thoại (`DialogUIManager.DisplayClientText`)**:
@@ -54,41 +65,27 @@ Bộ sưu tập mã nguồn các bản mod Native (`IMod`) độc lập, không 
 
 ## 🚀 Hướng Dẫn Cài Đặt (Installation)
 
-1. Tải về thư mục mod mong muốn (hoặc build từ mã nguồn theo hướng dẫn bên dưới).
+1. Tải về thư mục mod mong muốn.
 2. Sao chép thư mục mod vào đường dẫn `Mods` của game:
    ```text
    <Thư_Mục_Game>\Mods\<Tên_Mod>\
    ├── <Tên_Mod>.dll
    └── manifest.xml
    ```
-3. Khởi động game. Vào menu **Modding** trong game để bật kích hoạt mod (hoặc game sẽ tự động nhận diện thông qua file cấu hình `SaveFile.es3`).
+3. Khởi động game. Mod sẽ tự động kích hoạt (thông qua `SaveFile.es3` hoặc menu Modding trong game).
+4. Phím tắt trong game:
+   - `F2`: Bật/Tắt Menu Phân Loại Hòm Đồ.
+   - `F3`: Gom & Phân loại nhanh tất cả vào các hòm theo cấu hình.
 
 ---
 
 ## 🔨 Hướng Dẫn Biên Dịch Mã Nguồn (Build from Source)
 
-Game sử dụng kiến trúc .NET Framework / .NET Standard 2.1 với Unity Mono. Bạn có thể sử dụng trình biên dịch Roslyn C# Compiler có sẵn trong Unity hoặc .NET SDK để biên dịch:
+Game sử dụng kiến trúc .NET Framework / .NET Standard 2.1 với Unity Mono. Chạy script `build_smart_sort.ps1` để biên dịch:
 
-### Biên dịch `SmartInventorySort`:
 ```powershell
-$managed = "<Thư_Mục_Game>\Probably Stolen_Data\Managed"
-$mono = "D:\Unity\Editor\2022.3.62f1\Editor\Data\MonoBleedingEdge\bin\mono.exe"
-$csc = "D:\Unity\Editor\2022.3.62f1\Editor\Data\MonoBleedingEdge\lib\mono\4.5\csc.exe"
-
-$refs = @(
-    "$managed\mscorlib.dll",
-    "$managed\netstandard.dll",
-    "$managed\Assembly-CSharp.dll",
-    "$managed\0Harmony.dll",
-    "$managed\UnityEngine.dll",
-    "$managed\UnityEngine.CoreModule.dll"
-)
-$refArgs = $refs | ForEach-Object { "/reference:`"$_`"" }
-
-& $mono $csc /target:library /nostdlib+ /langversion:latest "/out:SmartInventorySort.dll" $refArgs "SmartInventorySortMod.cs"
+powershell -File build_smart_sort.ps1
 ```
-
-Tương tự, các script build sẵn `build_smart_sort.ps1` và `build_augmented_detector.ps1` đã được thiết lập sẵn trong thư mục gốc.
 
 ---
 

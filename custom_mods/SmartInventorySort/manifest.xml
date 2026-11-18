@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Mod>
   <ID>SmartInventorySort</ID>
-  <Name>Sắp Xếp Kho Thông Minh (Smart Inventory Sort - Tối Ưu Diện Tích)</Name>
+  <Name>Sắp Xếp &amp; Phân Loại Kho Thông Minh (Smart Category &amp; Inventory Sort)</Name>
   <Author>Antigravity</Author>
-  <ModVersion>1.0.0</ModVersion>
-  <Description>Nâng cấp thuật toán sắp xếp kho đồ: Loại bỏ hoàn toàn các khoảng trống chết (gaps), gom các món đồ khít chặt vào nhau theo thuật toán tiếp xúc viền tối đa (Best-Fit Contact Perimeter). Tự động dồn gọn và bảo toàn các vật phẩm đã ghim hoặc rác bẩn cố định.</Description>
+  <ModVersion>1.1.0</ModVersion>
+  <Description>Bộ công cụ tối ưu hóa kho hàng đa năng:
+1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu chọn hòm, F3: Gom &amp; Phân loại nhanh): Tự động quét và chuyển đồ về đúng hòm (Vũ khí, Y tế, Thực phẩm, Linh kiện...) dựa trên tag đầu tiên của vật phẩm.
+2. Sắp xếp khít chặt: Vô hiệu hóa phân chia kệ ngang (PackShelves), kích hoạt quét từng ô (PackFirstFit) giúp nén gọn, loại bỏ khoảng trống thừa và không bị đè chồng item.</Description>
   <GameVersions>
     <Version>0.46</Version>
   </GameVersions>

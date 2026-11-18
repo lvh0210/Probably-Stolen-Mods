@@ -30,8 +30,16 @@
   - [x] 7.1: Gỡ bỏ hoàn toàn can thiệp xổ số độc đắc, đưa vé số quay đêm về 100% cơ chế mặc định của game
   - [x] 7.2: Giữ tính năng soi trước giải thưởng vé cào trong kho/kệ và hỗ trợ phím Space cào nhanh
 - [x] **Chặng 8: Tối ưu hóa Sắp xếp Kho Đồ (Smart Inventory Sort - Khắc phục khoảng trống thừa)**
-  - [x] 8.1: Ủy quyền và hoàn thiện thuật toán Best-Fit Contact Perimeter
-  - [x] 8.2: Kiểm duyệt (Verify & Self-audit) mã nguồn C# và biên dịch `SmartInventorySort.dll` bằng Roslyn
-  - [x] 8.3: Tạo `manifest.xml` chuẩn IMod có tiếng Việt và khai báo quyền reflection-external
-  - [x] 8.4: Cài đặt vào `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\` và kích hoạt trong `SaveFile.es3`
-  - [x] 8.5: Kiểm thử và xuất báo cáo tổng kết chi tiết cho người dùng
+  - [x] 8.1: Khắc phục triệt để lỗi va chạm và dồn góc bằng cơ chế Harmony bypass `PackShelves` sang `PackFirstFit` gốc
+  - [x] 8.2: Biên dịch và kiểm thử thành công `SmartInventorySort.dll`
+  - [x] 8.3: Cài đặt vào `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`
+- [x] **Chặng 9: Đóng gói và Phát hành Mã Nguồn lên GitHub (Git Repository Publishing)**
+  - [x] 9.1: Khởi tạo Git repo và thiết lập `.gitignore` chuẩn (chặn rác, game dump và file nhị phân lớn)
+  - [x] 9.2: Soạn thảo `README.md` chuyên sâu, đầy đủ tài liệu kiến trúc kỹ thuật và hướng dẫn sử dụng
+  - [x] 9.3: Đẩy toàn bộ mã nguồn lên GitHub tại repository `lvh0210/Probably-Stolen-Mods`
+- [x] **Chặng 10: Phát triển Mod Phân Loại & Sắp Xếp Đa Hòm (Category Storage Sorter)**
+  - [x] 10.1: Khảo sát cơ chế Container, Furniture và Inventory trong game để xác định cách truy xuất các hòm đồ
+  - [x] 10.2: Thiết kế thuật toán bóc tách tag đầu tiên của GameItem và gán danh mục (Vũ khí, Y tế, Thực phẩm...)
+  - [x] 10.3: Xây dựng hệ thống kết hợp 2 cách (Bảng Menu giao diện OnGUI phím F2 + Phím tắt thao tác nhanh F3)
+  - [x] 10.4: Tích hợp logic gom đồ liên hòm & tự động nén khít chặt bằng SmartInventorySort
+  - [x] 10.5: Biên dịch, cài đặt vào game và đồng bộ mã nguồn lên GitHub
