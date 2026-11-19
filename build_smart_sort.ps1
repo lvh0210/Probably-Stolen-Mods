@@ -13,7 +13,8 @@ $refs = @(
     "$managed\UnityEngine.CoreModule.dll",
     "$managed\UnityEngine.IMGUIModule.dll",
     "$managed\UnityEngine.InputLegacyModule.dll",
-    "$managed\UnityEngine.TextRenderingModule.dll"
+    "$managed\UnityEngine.TextRenderingModule.dll",
+    "$managed\UnityEngine.UI.dll"
 )
 
 $refArgs = $refs | ForEach-Object { "/reference:`"$_`"" }

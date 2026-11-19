@@ -79,3 +79,9 @@
   - [x] 16.3: Cập nhật `manifest.xml` phiên bản 1.4.1 và biên dịch thành công `SmartInventorySort.dll` (v1.4.1)
   - [x] 16.4: Triển khai vào thư mục game `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`
   - [x] 16.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub
+- [x] **Chặng 17: Cơ Chế 1 Hòm Chọn Nhiều Tag (Multi-Tag), Tách Biệt 26 Tag & Hệ Thống Thứ Tự Ưu Tiên Hòm (v1.5.0)**
+  - [x] 17.1: Bóc tách 26 Tag độc lập nguyên bản (Súng, Cận chiến, Đạn, Thuốc nổ, Phụ kiện, Y tế, Thực phẩm, Nước, Lọc nước, Rượu, Thuốc lá, Hàng cấm, Giáp, Vật liệu, Dụng cụ, Tài liệu, Vé số...)
+  - [x] 17.2: Triển khai cơ chế 1 hòm chọn nhiều Tag (Multi-Tag Selection) bằng các nút toggle checkbox trực quan, hỗ trợ chọn tất cả / bỏ chọn hết
+  - [x] 17.3: Xây dựng hệ thống thứ tự ưu tiên hòm (Container Priority System: 1, 2, 3...) kèm nút tăng giảm [▲]/[▼] và thuật toán phân phối đơn điệu chống hoàn toàn hiện tượng item nhảy qua nhảy lại giữa các hòm trùng tag
+  - [x] 17.4: Triển khai 11 bộ lọc Harmony chặn triệt để click chuột xuyên qua menu vào game (InputActionHandler, ItemMouseHandler, ItemMouseDoubleClickHandler, UIDragHandler, StoreUIManager, CustomEventHandler)
+  - [x] 17.5: Biên dịch thư viện `SmartInventorySort.dll` (v1.5.0), triển khai vào game, cập nhật tài liệu và đồng bộ Git
