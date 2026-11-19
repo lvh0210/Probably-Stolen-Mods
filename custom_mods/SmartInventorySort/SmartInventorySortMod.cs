@@ -21,7 +21,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt hệ thống Sắp Xếp Kho Tối Ưu (PackFirstFit).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt hệ thống Sắp Xếp Kho Tối Ưu (PackFirstFit + AutoRotate xoay thông minh).");
             }
 
             if (uiObject == null)
@@ -63,16 +63,26 @@ public class SmartInventorySortMod : IMod
 }
 
 // =========================================================================
-// 1. HARMONY PATCH: Vô hiệu hóa PackShelves để kích hoạt PackFirstFit chuẩn
+// 1. HARMONY PATCHES: Tối ưu hóa thuật toán lấp đầy & Tự động xoay ngang/dọc
 // =========================================================================
+// Patch 1: Vô hiệu hóa PackShelves để kích hoạt PackFirstFit chuẩn (loại bỏ hoàn toàn khoảng trống chết)
 [HarmonyPatch(typeof(InventorySortHelper), "PackShelves")]
 public static class DisablePackShelvesPatch
 {
     public static bool Prefix(ref List<ValueTuple<GameItem, GridShape>> __result)
     {
-        // Trả về null để ép game sử dụng thuật toán PackFirstFit (quét từng ô)
-        // Loại bỏ hoàn toàn khoảng trống chết trên kệ mà không gây đè chồng item
         __result = null;
+        return false;
+    }
+}
+
+// Patch 2: Luôn bật tự động xoay ngang / xoay dọc (AutoRotate) để món đồ xoay vừa khít mọi ô trống
+[HarmonyPatch(typeof(EmporiumOption), "get_SortAutoRotate")]
+public static class ForceSortAutoRotatePatch
+{
+    public static bool Prefix(ref bool __result)
+    {
+        __result = true; // Luôn cho phép xoay 90 độ để lấp đầy khít chặt tối đa
         return false;
     }
 }
@@ -85,7 +95,8 @@ public class SmartCategorySortController : MonoBehaviour
     public static SmartCategorySortController Instance;
 
     private bool showMenu = false;
-    private Rect windowRect = new Rect(40, 40, 600, 540);
+    private bool showAllStorages = false; // Mặc định FALSE: chỉ hiển thị những hòm có ID rõ ràng
+    private Rect windowRect = new Rect(40, 40, 620, 520);
     private Vector2 scrollPos;
     private string statusMessage = "Bấm F2 để ẩn/hiện bảng. Bấm F3 để gom và phân loại theo ưu tiên.";
 
@@ -145,72 +156,99 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.color = Color.white;
         GUILayout.Space(4);
 
-        GUILayout.Label("Cấu hình Hòm Đồ (Click nút để đổi loại đồ nhận hoặc để Tự Động):", EditorStyles_BoldLabel());
-        GUILayout.Label("💡 [⭐ Ưu Tiên] được lấp đầy trước. Kho bị [⛔ BỎ QUA / KHÓA] tuyệt đối được bảo vệ 100%.", EditorStyles_SmallItalic());
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Danh Sách Hòm Chứa (Click nút để đổi loại đồ nhận hoặc để Tự Động):", EditorStyles_BoldLabel());
+        GUILayout.FlexibleSpace();
+        showAllStorages = GUILayout.Toggle(showAllStorages, "Hiện cả kho phụ tiệm");
+        GUILayout.EndHorizontal();
 
-        List<NamedInventory> inventories = GetAvailableInventories();
+        GUILayout.Label("💡 Tự động xoay ngang/dọc để nén khít nhất. [⭐ Ưu Tiên] được lấp đầy trước.", EditorStyles_SmallItalic());
 
-        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(310));
-        foreach (var ni in inventories)
+        List<NamedInventory> allInventories = GetAvailableInventories();
+        List<NamedInventory> displayInventories = new List<NamedInventory>();
+
+        foreach (var ni in allInventories)
         {
-            GUILayout.BeginHorizontal("box");
+            // Chỉ hiển thị hòm có ID rõ ràng (trừ khi người dùng tích chọn hiện cả kho phụ)
+            if (ni.HasId || showAllStorages)
+            {
+                displayInventories.Add(ni);
+            }
+        }
 
-            // Tên hòm, vị trí, kích thước và số lượng món hiện tại
-            int count = (ni.Inventory.childItems != null) ? ni.Inventory.childItems.Count : 0;
-            string labelText = ni.DisplayName + " (" + count + " món)";
-            GUILayout.Label(labelText, GUILayout.Width(270));
+        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(300));
 
-            // Lấy trạng thái hiện tại của hòm
-            string id = ni.Id;
-            int currentSetting = -1;
-            if (customAssignments.ContainsKey(id))
+        if (displayInventories.Count == 0)
+        {
+            GUILayout.Space(30);
+            GUI.color = Color.cyan;
+            GUILayout.Label("💡 Hiện chưa có hòm đồ riêng nào (hòm có ID) trong tiệm.", EditorStyles_BoldLabel());
+            GUILayout.Label("Hãy đặt trên bàn hoặc quẹt thẻ mở một hòm đồ (Hòm an ninh, Hộp sơ cứu, Hộp cơm, Két sắt...) để sử dụng!");
+            GUI.color = Color.white;
+        }
+        else
+        {
+            foreach (var ni in displayInventories)
             {
-                currentSetting = customAssignments[id];
-            }
-            else if (id == "hidden_stash")
-            {
-                // Kho lậu mặc định luôn là KHÓA (0) để bảo vệ tuyệt đối
-                currentSetting = 0;
-            }
+                GUILayout.BeginHorizontal("box");
 
-            // Hiển thị nút bấm với nhãn tương ứng
-            string btnText;
-            if (currentSetting == -1)
-            {
-                int autoCat = ni.DefaultCategory;
-                btnText = "🤖 Tự Động: " + CategoryNames[autoCat];
-                GUI.backgroundColor = new Color(0.85f, 0.95f, 1.0f);
-            }
-            else if (currentSetting == 0)
-            {
-                btnText = "⛔ BỎ QUA / KHÓA";
-                GUI.backgroundColor = new Color(0.95f, 0.45f, 0.45f);
-            }
-            else
-            {
-                btnText = "⭐ Ưu Tiên: " + CategoryNames[currentSetting];
-                GUI.backgroundColor = new Color(1.0f, 0.9f, 0.4f);
-            }
+                // Tên hòm, vị trí, kích thước và số lượng món hiện tại
+                int count = (ni.Inventory.childItems != null) ? ni.Inventory.childItems.Count : 0;
+                string labelText = ni.DisplayName + " (" + count + " món)";
+                GUILayout.Label(labelText, GUILayout.Width(280));
 
-            // Click nút để xoay vòng cấu hình cho hòm này
-            if (GUILayout.Button(btnText, GUILayout.Width(260), GUILayout.Height(26)))
-            {
-                // Chu kỳ: -1 (Tự động) -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 0 (Khóa) -> -1 (Tự động)
-                if (currentSetting == -1)
-                    currentSetting = 1;
-                else if (currentSetting >= 1 && currentSetting < 7)
-                    currentSetting++;
-                else if (currentSetting == 7)
+                // Lấy trạng thái hiện tại của hòm
+                string id = ni.Id;
+                int currentSetting = -1;
+                if (customAssignments.ContainsKey(id))
+                {
+                    currentSetting = customAssignments[id];
+                }
+                else if (id == "hidden_stash")
+                {
+                    // Kho lậu mặc định luôn là KHÓA (0) để bảo vệ tuyệt đối
                     currentSetting = 0;
+                }
+
+                // Hiển thị nút bấm với nhãn tương ứng
+                string btnText;
+                if (currentSetting == -1)
+                {
+                    int autoCat = ni.DefaultCategory;
+                    btnText = "🤖 Tự Động: " + CategoryNames[autoCat];
+                    GUI.backgroundColor = new Color(0.85f, 0.95f, 1.0f);
+                }
+                else if (currentSetting == 0)
+                {
+                    btnText = "⛔ BỎ QUA / KHÓA";
+                    GUI.backgroundColor = new Color(0.95f, 0.45f, 0.45f);
+                }
                 else
-                    currentSetting = -1;
+                {
+                    btnText = "⭐ Ưu Tiên: " + CategoryNames[currentSetting];
+                    GUI.backgroundColor = new Color(1.0f, 0.9f, 0.4f);
+                }
 
-                customAssignments[id] = currentSetting;
-                SaveAssignments();
+                // Click nút để xoay vòng cấu hình cho hòm này
+                if (GUILayout.Button(btnText, GUILayout.Width(270), GUILayout.Height(26)))
+                {
+                    // Chu kỳ: -1 (Tự động) -> 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 0 (Khóa) -> -1 (Tự động)
+                    if (currentSetting == -1)
+                        currentSetting = 1;
+                    else if (currentSetting >= 1 && currentSetting < 7)
+                        currentSetting++;
+                    else if (currentSetting == 7)
+                        currentSetting = 0;
+                    else
+                        currentSetting = -1;
+
+                    customAssignments[id] = currentSetting;
+                    SaveAssignments();
+                }
+                GUI.backgroundColor = Color.white;
+
+                GUILayout.EndHorizontal();
             }
-            GUI.backgroundColor = Color.white;
-
-            GUILayout.EndHorizontal();
         }
         GUILayout.EndScrollView();
 
@@ -324,7 +362,6 @@ public class SmartCategorySortController : MonoBehaviour
             }
 
             int totalMoved = 0;
-            HashSet<GameGridInventory> affectedInventories = new HashSet<GameGridInventory>();
 
             // Quét từng kho nguồn
             foreach (var sourceNI in inventories)
@@ -390,8 +427,6 @@ public class SmartCategorySortController : MonoBehaviour
                         {
                             totalMoved++;
                             moved = true;
-                            affectedInventories.Add(destInv);
-                            affectedInventories.Add(sourceInv);
                             break;
                         }
                         else
@@ -417,8 +452,6 @@ public class SmartCategorySortController : MonoBehaviour
                             {
                                 totalMoved++;
                                 moved = true;
-                                affectedInventories.Add(destInv);
-                                affectedInventories.Add(sourceInv);
                                 break;
                             }
                             else
@@ -433,6 +466,7 @@ public class SmartCategorySortController : MonoBehaviour
             }
 
             // Sau khi phân phối xong, tự động sắp xếp nén khít toàn bộ các kho & hòm (TRỪ CÁC KHO BỊ KHÓA)
+            // Nhờ ForceSortAutoRotatePatch, toàn bộ item sẽ được tự động xoay ngang/dọc để lấp khít hoàn hảo
             foreach (var ni in inventories)
             {
                 int invSetting = -1;
@@ -452,7 +486,7 @@ public class SmartCategorySortController : MonoBehaviour
                 }
             }
 
-            statusMessage = "✅ Đã phân loại & sắp xếp lại toàn bộ kho! (Đã chuyển " + totalMoved + " món đồ theo ưu tiên)";
+            statusMessage = "✅ Đã phân loại & sắp xếp khít chặt toàn bộ kho! (Đã chuyển " + totalMoved + " món đồ theo ưu tiên)";
             Debug.Log("[SmartCategorySort] " + statusMessage);
         }
         catch (Exception ex)
@@ -487,7 +521,7 @@ public class SmartCategorySortController : MonoBehaviour
                     count++;
                 }
             }
-            statusMessage = "✅ Đã nén khít chặt toàn bộ " + count + " kho & hòm đồ thành công!";
+            statusMessage = "✅ Đã nén khít chặt toàn bộ " + count + " kho & hòm đồ (xoay ngang/dọc tối ưu)!";
         }
         catch (Exception ex)
         {
@@ -742,6 +776,7 @@ public class SmartCategorySortController : MonoBehaviour
         public string DisplayName;
         public GameGridInventory Inventory;
         public int DefaultCategory;
+        public bool HasId; // true cho các hòm có ID rõ ràng (crates, opened boxes)
     }
 
     private static List<GameGridInventory> GetInventoriesFromWindow(PixelWindow pw)
@@ -843,16 +878,16 @@ public class SmartCategorySortController : MonoBehaviour
         EmporiumEntry emporium = EmporiumEntry.Instance;
         if (emporium != null)
         {
-            AddIfValid(list, seenInvs, "main_inv", "🏢 Kho Tiệm Chính (Bàn Thao Tác)", emporium.invElement, 0);
-            AddIfValid(list, seenInvs, "showcase", "✨ Kệ Kính Trưng Bày", emporium.showcaseElement, 0);
-            AddIfValid(list, seenInvs, "front_box", "📦 Hòm Đồ Trước Quầy", emporium.frontInvinvElement, 0);
-            AddIfValid(list, seenInvs, "back_box", "📦 Hòm Đồ Sau Quầy", emporium.backInvinvElement, 0);
-            AddIfValid(list, seenInvs, "counter_box", "🗄️ Hòm Quầy Thu Ngân", emporium.backInvinvElementCounter, 0);
-            AddIfValid(list, seenInvs, "bazar_left", "🏪 Hòm Chợ Trái", emporium.bazarLeftinvElement, 0);
-            AddIfValid(list, seenInvs, "afterhour", "🌙 Kho Ngoài Giờ", emporium.afterhourInventory, 0);
+            AddIfValid(list, seenInvs, "main_inv", "🏢 Kho Tiệm Chính (Bàn Thao Tác)", emporium.invElement, 0, false);
+            AddIfValid(list, seenInvs, "showcase", "✨ Kệ Kính Trưng Bày", emporium.showcaseElement, 0, false);
+            AddIfValid(list, seenInvs, "front_box", "📦 Hòm Đồ Trước Quầy", emporium.frontInvinvElement, 0, false);
+            AddIfValid(list, seenInvs, "back_box", "📦 Hòm Đồ Sau Quầy", emporium.backInvinvElement, 0, false);
+            AddIfValid(list, seenInvs, "counter_box", "🗄️ Hòm Quầy Thu Ngân", emporium.backInvinvElementCounter, 0, false);
+            AddIfValid(list, seenInvs, "bazar_left", "🏪 Hòm Chợ Trái", emporium.bazarLeftinvElement, 0, false);
+            AddIfValid(list, seenInvs, "afterhour", "🌙 Kho Ngoài Giờ", emporium.afterhourInventory, 0, false);
 
-            // 🕵️ Kho Lậu / Hòm Ẩn: Mặc định là 0 (Khóa / Bỏ qua) để bảo vệ tuyệt đối hàng lậu
-            AddIfValid(list, seenInvs, "hidden_stash", "🕵️ Kho Lậu / Hòm Ẩn", emporium.hiddenElement, 0);
+            // 🕵️ Kho Lậu / Hòm Ẩn: Mặc định luôn là 0 (Khóa / Bỏ qua) để bảo vệ tuyệt đối
+            AddIfValid(list, seenInvs, "hidden_stash", "🕵️ Kho Lậu / Hòm Ẩn", emporium.hiddenElement, 0, false);
         }
 
         // 1. Quét tất cả cửa sổ hòm đang mở (WindowsHandler.current.visibleWindows)
@@ -871,13 +906,14 @@ public class SmartCategorySortController : MonoBehaviour
                     int defCat = DetectDefaultCategory(rawName, parentItem);
 
                     string id = GetContainerPersistentId(parentItem, rawName);
+                    int shortUid = (parentItem != null && parentItem.uniqueId > 0) ? parentItem.uniqueId : Math.Abs(pw.GetHashCode() % 1000);
 
                     foreach (var ggi in storages)
                     {
                         if (ggi != null && !seenInvs.Contains(ggi))
                         {
-                            string displayName = "🔓 " + rawName + " [Đang Mở]";
-                            AddIfValid(list, seenInvs, id, displayName, ggi, defCat);
+                            string displayName = "🔓 " + rawName + " (#" + shortUid + ") [Đang Mở]";
+                            AddIfValid(list, seenInvs, id, displayName, ggi, defCat, true);
                         }
                     }
                 }
@@ -913,14 +949,14 @@ public class SmartCategorySortController : MonoBehaviour
 
                         string id = GetContainerPersistentId(it, it.name);
                         int defCat = DetectDefaultCategory(it.name, it);
+                        int shortUid = (it.uniqueId > 0) ? it.uniqueId : Math.Abs(it.GetHashCode() % 1000);
 
                         foreach (var ggi in storages)
                         {
                             if (ggi != null && !seenInvs.Contains(ggi))
                             {
-                                int shortUid = (it.uniqueId > 0) ? it.uniqueId : Math.Abs(it.GetHashCode() % 1000);
                                 string displayName = "💼 " + it.name + " (#" + shortUid + ") [" + source.locationName + "]";
-                                AddIfValid(list, seenInvs, id, displayName, ggi, defCat);
+                                AddIfValid(list, seenInvs, id, displayName, ggi, defCat, true);
                             }
                         }
                     }
@@ -932,7 +968,7 @@ public class SmartCategorySortController : MonoBehaviour
         return list;
     }
 
-    private void AddIfValid(List<NamedInventory> list, HashSet<GameGridInventory> seen, string id, string name, GameGridInventory inv, int defCat)
+    private void AddIfValid(List<NamedInventory> list, HashSet<GameGridInventory> seen, string id, string name, GameGridInventory inv, int defCat, bool hasId)
     {
         if (inv != null && inv.inventoryShape != null && inv.inventoryShape.width > 0 && inv.inventoryShape.height > 0)
         {
@@ -944,6 +980,7 @@ public class SmartCategorySortController : MonoBehaviour
             ni.DisplayName = name + " [" + inv.inventoryShape.width + "x" + inv.inventoryShape.height + "]";
             ni.Inventory = inv;
             ni.DefaultCategory = defCat;
+            ni.HasId = hasId;
             list.Add(ni);
         }
     }

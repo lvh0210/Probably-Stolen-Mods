@@ -61,3 +61,8 @@
   - [x] 13.3: Mở rộng đầy đủ bộ tag nhận diện (vũ khí, y tế, thực phẩm, linh kiện, công cụ, trang bị, tài liệu)
   - [x] 13.4: Hiển thị nguồn gốc vị trí hòm trên menu F2 (`[Kho Chính]`, `[Hòm Sau]`, `[Kệ Kính]`, `[Đang Mở]`)
   - [x] 13.5: Biên dịch, cài đặt vào game và đồng bộ Git
+- [x] **Chặng 14: Tối Ưu Nén Khít Xoay Đồ 90° & Thu Gọn Menu F2 (v1.3.1)**
+  - [x] 14.1: Thêm Harmony prefix `EmporiumOption.get_SortAutoRotate` cưỡng chế `true` để thuật toán PackFirstFit tự động xoay item 90° (ngang/dọc) lấp đầy mọi khoảng trống thừa
+  - [x] 14.2: Lọc giao diện menu F2 chỉ hiển thị các hòm đồ thực sự có ID (`HasId == true`), ẩn toàn bộ kho nền tĩnh tránh gây rối mắt
+  - [x] 14.3: Biên dịch thư viện `SmartInventorySort.dll` (v1.3.1) và triển khai thành công vào game
+  - [x] 14.4: Cập nhật tài liệu, kiểm thử và đồng bộ mã nguồn lên GitHub

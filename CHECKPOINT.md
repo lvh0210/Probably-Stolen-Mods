@@ -3,20 +3,21 @@
 - **Dự án**: Bộ Mod & Việt Hóa game Probably Stolen (Bản IMod Native)
 - **Thư mục lưu trữ**: `D:\VibeCode\Probably Stolen`
 - **Kho lưu trữ GitHub**: [https://github.com/lvh0210/Probably-Stolen-Mods](https://github.com/lvh0210/Probably-Stolen-Mods)
-- **Trạng thái**: Hoàn tất 100% tối ưu hóa toàn diện, sửa triệt để các lỗi logic ngầm, định danh bền vững và tăng tốc hiệu năng (`SmartInventorySort` v1.3.0).
+- **Trạng thái**: Hoàn tất 100% tối ưu hóa nén khít chặt nhờ tự động xoay item 90° và thu gọn menu F2 chỉ hiển thị hòm có ID (`SmartInventorySort` v1.3.1).
 
-## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.3.0):
-1. **Định danh hòm bền vững vĩnh viễn (Persistent Container Identification)**:
-   - Thay thế hoàn toàn mã hash động `GetHashCode()` bằng ID chuẩn của game: `item.uniqueId` kết hợp `item.identifier` (ví dụ `box_sec_box_1042`).
-   - Cấu hình gán hòm của người chơi được lưu bền vững qua mọi phiên chơi, save/load hay sang ngày mới mà không bao giờ bị mất hoặc lệch hòm.
-2. **Kiểm tra tính tương thích an toàn trước khi chuyển đồ (`CanContainerAcceptItem`)**:
-   - Tích hợp kiểm tra `destInv.mayInventoryAddItemFunc(item, destInv)` và `IsInsertLocked()`.
-   - Ngăn chặn triệt để tình trạng nhét nhầm đồ ngoại lai vào các hòm chuyên dụng có luật riêng của game (như Hộp sơ cứu chỉ nhận đồ y tế), loại bỏ hoàn toàn các lỗi xung đột logic ngầm.
-3. **Mở rộng bộ tag nhận diện danh mục đa tầng**:
-   - Tích hợp đầy đủ toàn bộ các tag đặc biệt của game (ADV_GUN, MELEE_WEAPON, ORGAN_ITEM, CANNED_FOOD, TACTICAL_EQUIPMENT, NPU_BRAND, TOOLBOX...).
-4. **Hiển thị trực quan nguồn gốc vị trí hòm trong Menu F2**:
-   - Hiển thị rõ hòm đang nằm ở đâu trong tiệm: `[Kho Chính]`, `[Hòm Sau]`, `[Hòm Trước]`, `[Quầy Thu Ngân]`, `[Kệ Kính]`, `[Đang Mở]` kèm mã số cá thể (`#UID`) để người chơi phân biệt các hòm cùng loại cực kỳ dễ dàng.
-5. **Nén khít toàn bộ kho mượt mà không giật lag**:
-   - Tối ưu hóa chu trình nén: phân phối xong sẽ nén gọn gàng toàn bộ kho tiệm và các hòm đồ chỉ trong 1 chu kỳ, loại bỏ hiện tượng khựng giật khung hình.
+## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.3.1):
+1. **Tự động xoay ngang/dọc (Auto-Rotate 90°) để nén khít tuyệt đối**:
+   - Thêm Harmony prefix `ForceSortAutoRotatePatch` trên `EmporiumOption.get_SortAutoRotate` trả về `true`.
+   - Cơ chế này kích hoạt bộ phát sinh hướng đặt đồ `<Orientations>d__18` của game, tự động thử cả hướng ngang (0) và dọc (1) cho mọi item trong quá trình nén `PackFirstFit`. Nhờ đó, các món đồ hình chữ nhật dài sẽ tự động xoay để vừa khít vào các khoảng trống hẹp còn thừa.
+2. **Thu gọn Menu F2 siêu tinh giản (Chỉ hiển thị hòm có ID)**:
+   - Thêm thuộc tính `HasId` vào `NamedInventory`. Các kho nền cố định của tiệm (`main_inv`, `showcase`, `front_box`, `back_box`, `counter_box`, `bazar_left`, `afterhour`, `hidden_stash`) được đánh dấu `HasId = false`.
+   - Menu cấu hình F2 tự động lọc chỉ hiển thị các hòm đồ di động/thùng đồ thực sự của người chơi (`uniqueId > 0`), loại bỏ hoàn toàn các dòng kho hệ thống tĩnh gây rối mắt.
+3. **Định danh hòm bền vững vĩnh viễn (Persistent Container Identification)**:
+   - Sử dụng ID chuẩn của game: `item.uniqueId` kết hợp `item.identifier` (ví dụ `box_sec_box_1042`).
+   - Cấu hình gán danh mục của người chơi lưu bền vững qua mọi phiên chơi, save/load hay sang ngày mới.
+4. **Kiểm tra tính tương thích an toàn trước khi chuyển đồ (`CanContainerAcceptItem`)**:
+   - Tích hợp kiểm tra `destInv.mayInventoryAddItemFunc(item, destInv)` và `IsInsertLocked()`, tránh nhét sai loại đồ vào hòm chuyên dụng.
+5. **Hiển thị trực quan vị trí hòm trong Menu F2**:
+   - Hiển thị rõ nguồn gốc vị trí hòm: `[Kho Chính]`, `[Hòm Sau]`, `[Kệ Kính]`, `[Đang Mở]` kèm mã số `#UID` để phân biệt các hòm cùng loại.
 
-*Cập nhật mốc tự động: Step 2060 | 2026-11-18 21:45:00*
+*Cập nhật tự động: v1.3.1 | 2026-11-19 11:18*
