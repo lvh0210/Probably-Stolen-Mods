@@ -6,17 +6,18 @@ using UnityEngine;
 using HarmonyLib;
 
 // =========================================================================
-// SMART INVENTORY SORT & CATEGORY STORAGE MOD (v1.4.0)
+// SMART INVENTORY SORT & CATEGORY STORAGE MOD (v1.4.1)
 // Tác giả: Antigravity AI (VibeCode)
 // Tính năng nâng cấp:
 // 1. PackFirstFit thay vì PackShelves (loại bỏ hoàn toàn khoảng trống chết)
 // 2. ForceSortAutoRotatePatch: Luôn tự động xoay ngang/dọc (Auto-Rotate 90°)
 // 3. Hệ thống 21 Danh Mục Phân Loại bao quát 100% Item & Tag trong Game
-// 4. Menu F2 Card UI hiện đại, thanh lịch, dễ nhìn, lọc hòm có ID (#UID)
-// 5. Popup Selector (Nút bấm [🎯 Chọn Tag ▾] mở bảng danh mục chọn trực tiếp)
-// 6. Phân phối 2 tầng ưu tiên: Hòm chỉ định -> Hòm tự động -> Kho chung
-// 7. Bảo vệ đóng băng 100% kho bị khóa (chặn cả rút đồ lẫn nhét đồ)
-// 8. Định danh bền vững (Persistent Container ID) lưu cấu hình vĩnh viễn
+// 4. Menu F2 Card UI hiện đại, thanh lịch, lọc hòm có ID (#UID)
+// 5. Giao diện 1 CỬA SỔ DUY NHẤT: Chuyển trang (Page Switch) khi chọn Tag,
+//    loại bỏ hoàn toàn lỗi mở 2 cửa sổ đè lên nhau gây rối mắt!
+// 6. CHỐNG CLICK XUYÊN 100%: Chặn tia raycast của CustomEventHandler,
+//    StoreUIManager và ItemMouseDragHandler khi chuột nằm trên menu F2.
+// 7. Lưu trữ cấu hình an toàn qua PlayerPrefs nội bộ, không cảnh báo quyền.
 // =========================================================================
 
 public class SmartInventorySortMod : IMod
@@ -36,7 +37,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt hệ thống Sắp Xếp Kho Tối Ưu (PackFirstFit + AutoRotate 90°).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt hệ thống Sắp Xếp Kho Tối Ưu (PackFirstFit + AutoRotate 90° + Anti-Clickthrough).");
             }
 
             if (uiObject == null)
@@ -44,7 +45,7 @@ public class SmartInventorySortMod : IMod
                 uiObject = new GameObject("SmartCategorySortUI");
                 uiObject.AddComponent<SmartCategorySortController>();
                 UnityEngine.Object.DontDestroyOnLoad(uiObject);
-                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 & Sắp Xếp Đa Hòm v1.4.0.");
+                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 & Sắp Xếp Đa Hòm v1.4.1.");
             }
         }
         catch (Exception ex)
@@ -99,6 +100,50 @@ public static class ForceSortAutoRotatePatch
 }
 
 // =========================================================================
+// HARMONY PATCHES: CHỐNG CLICK XUYÊN CHUỘT QUA MENU VÀO BÀN CHƠI GAME
+// =========================================================================
+[HarmonyPatch(typeof(CustomEventHandler), "UpdateRayCast")]
+public static class BlockCustomEventHandlerRaycastPatch
+{
+    public static bool Prefix(ref bool ___hasRayCast, ref TreeNodeRender ___rayCastResult)
+    {
+        if (SmartCategorySortController.IsPointerOverUI())
+        {
+            ___hasRayCast = false;
+            ___rayCastResult = null;
+            return false; // Chặn hoàn toàn raycast xuyên qua menu
+        }
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(StoreUIManager), "CheckRaycast")]
+public static class BlockStoreUIRaycastPatch
+{
+    public static bool Prefix()
+    {
+        if (SmartCategorySortController.IsPointerOverUI())
+        {
+            return false; // Chặn raycast kiểm tra UI của cửa hàng
+        }
+        return true;
+    }
+}
+
+[HarmonyPatch(typeof(ItemMouseDragHandler), "StartDrag")]
+public static class BlockItemMouseDragHandlerStartDragPatch
+{
+    public static bool Prefix()
+    {
+        if (SmartCategorySortController.IsPointerOverUI())
+        {
+            return false; // Chặn gắp/kéo đồ khi chuột đang trên menu
+        }
+        return true;
+    }
+}
+
+// =========================================================================
 // 2. CONTROLLER & UI: Phân loại theo Danh Mục & Menu F2 Card UI Chuyên Nghiệp
 // =========================================================================
 public class SmartCategorySortController : MonoBehaviour
@@ -107,15 +152,16 @@ public class SmartCategorySortController : MonoBehaviour
 
     private bool showMenu = false;
     private bool showAllStorages = false; // Mặc định FALSE: chỉ hiển thị những hòm có ID rõ ràng
-    private Rect windowRect = new Rect(50, 30, 860, 640);
+    public Rect windowRect = new Rect(50, 30, 860, 640);
     private Vector2 scrollPos;
+    private Vector2 selectorScrollPos;
     private string statusMessage = "Bấm F2 để ẩn/hiện bảng. Bấm F3 để gom và phân loại toàn bộ kho.";
 
-    // Modal Popup chọn Tag / Danh mục
-    private string activePopupContainerId = null;
-    private string activePopupContainerName = "";
-    private Rect popupRect = new Rect(140, 80, 680, 540);
-    private Vector2 popupScrollPos;
+    // Trạng thái trang chuyển đổi (Page Switching):
+    // null = Trang danh sách hòm đồ chính
+    // khác null = Đang ở trang chọn danh mục cho hòm có Id này
+    private string activeContainerIdForSelection = null;
+    private string activeContainerNameForSelection = "";
 
     // Danh sách 21 danh mục hoàn chỉnh của toàn bộ game
     public static readonly string[] CategoryNames = new string[]
@@ -156,13 +202,21 @@ public class SmartCategorySortController : MonoBehaviour
         LoadSavedAssignments();
     }
 
+    // Hàm kiểm tra con trỏ chuột có đang nằm trên cửa sổ Menu hay không
+    public static bool IsPointerOverUI()
+    {
+        if (Instance == null || !Instance.showMenu) return false;
+        Vector2 mouseGui = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
+        return Instance.windowRect.Contains(mouseGui);
+    }
+
     private void Update()
     {
         // F2: Bật/Tắt Menu Giao Diện Cấu Hình
         if (Input.GetKeyDown(KeyCode.F2))
         {
             showMenu = !showMenu;
-            if (!showMenu) activePopupContainerId = null;
+            if (!showMenu) activeContainerIdForSelection = null;
         }
 
         // F3: Phím Tắt Nhanh - Gom & Phân Loại Tất Cả Theo Ưu Tiên
@@ -178,21 +232,30 @@ public class SmartCategorySortController : MonoBehaviour
 
         GUI.skin.window.fontSize = 14;
 
-        // Window chính
+        // VẼ 1 CỬA SỔ DUY NHẤT (Chống đè cửa sổ, chống kéo ra kéo vào)
         windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY)");
+    }
 
-        // Window popup chọn tag (nếu đang kích hoạt)
-        if (!string.IsNullOrEmpty(activePopupContainerId))
+    private void DrawMainWindow(int windowId)
+    {
+        // NẾU ĐANG CHỌN DANH MỤC CHO HÒM -> CHUYỂN TRANG CHỌN DANH MỤC
+        if (!string.IsNullOrEmpty(activeContainerIdForSelection))
         {
-            GUI.BringWindowToFront(889912);
-            popupRect = GUI.Window(889912, popupRect, DrawTagPopup, "🎯 CHỌN LOẠI VẬT PHẨM CHO HÒM");
+            DrawTagSelectorPage();
         }
+        else
+        {
+            // TRANG CHÍNH: DANH SÁCH CÁC HÒM ĐỒ
+            DrawMainContainerListPage();
+        }
+
+        GUI.DragWindow(new Rect(0, 0, 860, 28));
     }
 
     // =========================================================================
-    // GIAO DIỆN CHÍNH (F2) - THIẾT KẾ CARD HIỆN ĐẠI, THOÁNG ĐÃNG
+    // TRANG 1: DANH SÁCH CÁC HÒM ĐỒ DẠNG THẺ CARD THOÁNG ĐÃNG
     // =========================================================================
-    private void DrawMainWindow(int windowId)
+    private void DrawMainContainerListPage()
     {
         GUILayout.Space(6);
 
@@ -210,7 +273,7 @@ public class SmartCategorySortController : MonoBehaviour
         // Header ghi chú
         GUILayout.BeginHorizontal();
         GUI.color = new Color(0.7f, 0.9f, 1.0f);
-        GUILayout.Label("Danh Sách Hòm Chứa: Bấm [Chọn Tag ▾] để gán trực tiếp loại đồ nhận ưu tiên.");
+        GUILayout.Label("Danh Sách Hòm Chứa: Bấm [🎯 Chọn Tag ▾] để gán trực tiếp loại đồ nhận ưu tiên.");
         GUI.color = Color.white;
         GUILayout.EndHorizontal();
 
@@ -293,14 +356,12 @@ public class SmartCategorySortController : MonoBehaviour
 
                 GUILayout.Space(10);
 
-                // NÚT CHÍNH: MỞ POPUP DANH SÁCH TAG ĐỂ CHỌN TRỰC TIẾP
+                // NÚT CHÍNH: CHUYỂN SANG TRANG CHỌN TAG (KHÔNG MỞ CỬA SỔ PHỤ ĐÈ LÊN)
                 GUI.backgroundColor = new Color(0.3f, 0.85f, 0.5f);
                 if (GUILayout.Button("🎯 Chọn Tag ▾", GUILayout.Width(140), GUILayout.Height(26)))
                 {
-                    activePopupContainerId = id;
-                    activePopupContainerName = ni.DisplayName;
-                    popupRect.x = windowRect.x + 90;
-                    popupRect.y = windowRect.y + 50;
+                    activeContainerIdForSelection = id;
+                    activeContainerNameForSelection = ni.DisplayName;
                 }
                 GUI.backgroundColor = Color.white;
 
@@ -367,46 +428,47 @@ public class SmartCategorySortController : MonoBehaviour
         if (GUILayout.Button("❌ Đóng (F2)", GUILayout.Height(36), GUILayout.Width(130)))
         {
             showMenu = false;
-            activePopupContainerId = null;
+            activeContainerIdForSelection = null;
         }
         GUI.backgroundColor = Color.white;
 
         GUILayout.EndHorizontal();
-
-        GUI.DragWindow(new Rect(0, 0, 860, 28));
     }
 
     // =========================================================================
-    // MODAL POPUP: BẢNG CHỌN DANH MỤC & TAG TRỰC TIẾP (1 CLICK)
+    // TRANG 2: TRANG CHỌN DANH MỤC TRỰC TIẾP (INLINE - HOÀN TOÀN KHÔNG ĐÈ CỬA SỔ)
     // =========================================================================
-    private void DrawTagPopup(int windowId)
+    private void DrawTagSelectorPage()
     {
         GUILayout.Space(6);
 
-        GUI.color = new Color(1.0f, 0.9f, 0.4f);
-        GUILayout.Label("Hòm đang chọn: " + activePopupContainerName, EditorStyles_BoldLabel());
+        // Khung thông tin hòm đang chọn
+        GUILayout.BeginVertical("box");
+        GUI.color = new Color(1.0f, 0.9f, 0.3f);
+        GUILayout.Label("🎯 ĐANG CẤU HÌNH LOẠI ĐỒ CHO: " + activeContainerNameForSelection, EditorStyles_BoldLabel());
         GUI.color = Color.white;
-        GUILayout.Label("Click trực tiếp vào danh mục hoặc tag dưới đây để gán ngay cho hòm:");
+        GUILayout.Label("Click trực tiếp vào 1 danh mục bên dưới để gán ngay cho hòm này:");
+        GUILayout.EndVertical();
 
-        GUILayout.Space(6);
+        GUILayout.Space(8);
 
         // Các tùy chọn nhanh hàng đầu
         GUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.4f, 0.7f, 1.0f);
-        if (GUILayout.Button("🤖 Tự Động (Theo Hòm)", GUILayout.Height(32)))
+        if (GUILayout.Button("🤖 Tự Động (Theo Hòm)", GUILayout.Height(34)))
         {
             SelectCategoryForActiveContainer(-1);
         }
 
         GUI.backgroundColor = new Color(0.95f, 0.4f, 0.4f);
-        if (GUILayout.Button("⛔ Bỏ Qua / Khóa Hòm", GUILayout.Height(32)))
+        if (GUILayout.Button("⛔ Bỏ Qua / Khóa Tuyệt Đối", GUILayout.Height(34)))
         {
             SelectCategoryForActiveContainer(0);
         }
 
         GUI.backgroundColor = new Color(0.85f, 0.85f, 0.85f);
-        if (GUILayout.Button("📦 Kho Chung (Đồ Khác)", GUILayout.Height(32)))
+        if (GUILayout.Button("📦 Kho Chung (Mọi Đồ Khác)", GUILayout.Height(34)))
         {
             SelectCategoryForActiveContainer(21);
         }
@@ -414,18 +476,17 @@ public class SmartCategorySortController : MonoBehaviour
 
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(6);
+        GUILayout.Space(8);
 
-        // Danh sách dạng lưới 2 cột các danh mục chi tiết
-        popupScrollPos = GUILayout.BeginScrollView(popupScrollPos, GUILayout.Height(350));
+        // Danh sách dạng lưới 2 cột các danh mục chi tiết (Nút bấm lớn, rõ nét, dễ bấm)
+        selectorScrollPos = GUILayout.BeginScrollView(selectorScrollPos, GUILayout.Height(380));
 
-        // 20 danh mục (từ 1 đến 20)
         for (int i = 1; i <= 20; i += 2)
         {
             GUILayout.BeginHorizontal();
 
             // Cột 1
-            if (GUILayout.Button(CategoryNames[i], GUILayout.Height(30), GUILayout.Width(305)))
+            if (GUILayout.Button(CategoryNames[i], GUILayout.Height(34), GUILayout.Width(405)))
             {
                 SelectCategoryForActiveContainer(i);
             }
@@ -433,44 +494,40 @@ public class SmartCategorySortController : MonoBehaviour
             // Cột 2
             if (i + 1 <= 20)
             {
-                if (GUILayout.Button(CategoryNames[i + 1], GUILayout.Height(30), GUILayout.Width(305)))
+                if (GUILayout.Button(CategoryNames[i + 1], GUILayout.Height(34), GUILayout.Width(405)))
                 {
                     SelectCategoryForActiveContainer(i + 1);
                 }
             }
 
             GUILayout.EndHorizontal();
-            GUILayout.Space(2);
+            GUILayout.Space(3);
         }
 
         GUILayout.EndScrollView();
 
-        GUILayout.Space(8);
+        GUILayout.Space(10);
 
-        // Nút hủy / đóng popup
+        // Thanh điều hướng quay lại
         GUILayout.BeginHorizontal();
-        GUILayout.FlexibleSpace();
         GUI.backgroundColor = new Color(0.8f, 0.8f, 0.8f);
-        if (GUILayout.Button("❌ Hủy / Đóng Bảng", GUILayout.Width(180), GUILayout.Height(28)))
+        if (GUILayout.Button("⬅ QUAY LẠI DANH SÁCH HÒM (Hủy Bỏ / Giữ Nguyên)", GUILayout.Height(36)))
         {
-            activePopupContainerId = null;
+            activeContainerIdForSelection = null;
         }
         GUI.backgroundColor = Color.white;
-        GUILayout.FlexibleSpace();
         GUILayout.EndHorizontal();
-
-        GUI.DragWindow(new Rect(0, 0, 680, 28));
     }
 
     private void SelectCategoryForActiveContainer(int catIndex)
     {
-        if (!string.IsNullOrEmpty(activePopupContainerId))
+        if (!string.IsNullOrEmpty(activeContainerIdForSelection))
         {
-            customAssignments[activePopupContainerId] = catIndex;
+            customAssignments[activeContainerIdForSelection] = catIndex;
             SaveAssignments();
             string catName = (catIndex == -1) ? "Tự Động" : (catIndex >= 0 && catIndex < CategoryNames.Length ? CategoryNames[catIndex] : "Kho Chung");
-            statusMessage = "Đã gán [" + catName + "] cho " + activePopupContainerName;
-            activePopupContainerId = null;
+            statusMessage = "Đã gán [" + catName + "] cho " + activeContainerNameForSelection;
+            activeContainerIdForSelection = null; // Tự động quay về danh sách hòm
         }
     }
 

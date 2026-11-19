@@ -3,27 +3,27 @@
 - **Dự án**: Bộ Mod & Việt Hóa game Probably Stolen (Bản IMod Native)
 - **Thư mục lưu trữ**: `D:\VibeCode\Probably Stolen`
 - **Kho lưu trữ GitHub**: [https://github.com/lvh0210/Probably-Stolen-Mods](https://github.com/lvh0210/Probably-Stolen-Mods)
-- **Trạng thái**: Hoàn tất 100% hệ thống 21 danh mục bao quát toàn bộ Tag game, nút Popup Selector chọn tag 1-click, giao diện F2 Card UI hiện đại và xóa bỏ hoàn toàn cảnh báo bảo mật ModScanner (`SmartInventorySort` v1.4.0).
+- **Trạng thái**: Hoàn tất 100% cơ chế chuyển trang đơn cửa sổ (Single-Window Page Switching) không còn chồng đè giao diện và tích hợp 3 bộ lọc Harmony triệt tiêu hoàn toàn hiện tượng nhấp chuột xuyên menu vào bàn chơi (`SmartInventorySort` v1.4.1).
 
-## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.4.0):
-1. **Xóa bỏ triệt để cảnh báo bảo mật ModScanner**:
-   - Chuyển toàn bộ cơ chế lưu trữ cấu hình gán hòm từ `System.IO.File` sang `PlayerPrefs` nội bộ an toàn của Unity engine.
-   - ModScanner không còn phát hiện bất kỳ lệnh can thiệp tệp tin ngoài luồng nào (`0 Findings`).
-   - Cập nhật tệp `manifest.xml` phiên bản `1.4.0` đồng bộ đầy đủ các quyền khai báo (`reflection-external`, `files`).
-2. **Bao quát 100% Tag & Phân loại vật phẩm trong game (21 Danh Mục)**:
-   - Trích xuất toàn bộ 61+ itemTypes và hệ thống `TagSystem` gốc từ mã nhị phân của game.
-   - Bổ sung đầy đủ các nhóm chuyên biệt: Súng, Đạn dược/C4, Phụ kiện súng (Gun Mods), Y tế, Thực phẩm, Nước uống, Rượu bia, Thuốc lá & Hàng cấm/Narcotic, Áo giáp, Vật liệu chế tạo, Dụng cụ/Kỹ thuật, Tài liệu/Thẻ từ/Vé số, Nội tạng sinh học, Mô-đun máy móc & Chip, Pin/Năng lượng, Hạt giống/Nông nghiệp, Đồ gia dụng/Xa xỉ, Hòm/Két chứa đồ, Nghệ thuật/Quà, Phế liệu/Rác, Kho chung.
-3. **Nút bấm sổ bảng chọn Tag trực tiếp (Popup Modal Selector)**:
-   - Trên mỗi hàng hòm đồ, bổ sung nút **[🎯 Chọn Tag ▾]**. Bấm vào sẽ mở một bảng popup trực quan dạng lưới 2 cột.
-   - Người chơi chỉ cần click 1 lần vào danh mục mong muốn là gán ngay lập tức, không cần click xoay vòng từng danh mục như trước.
-   - Hỗ trợ các nút chọn nhanh ở đầu popup: `[🤖 Tự Động Theo Hòm]`, `[⛔ Khóa Tuyệt Đối]`, `[📦 Kho Chung]`.
-4. **Đại tu toàn diện giao diện F2 (Card UI Polish)**:
-   - Mở rộng kích thước bảng lên `860 x 640` cực kỳ thoáng đãng, dễ nhìn.
-   - Từng hòm đồ được trình bày dưới dạng thẻ Card riêng biệt với viền và khoảng đệm chuẩn.
-   - Badge trạng thái màu sắc tương phản cao: Vàng ánh kim (`⭐ Ưu Tiên`), Xanh lam (`🤖 Tự Động`), Đỏ cam (`⛔ Đã Khóa`).
-   - Bổ sung nút bấm thao tác nhanh 1 chạm: `[🤖 Auto]` và `[⛔ Khóa] / [🔓 Mở]`.
-5. **Bảo tồn cơ chế nén chặt xoay 90° & bảo vệ kho khóa**:
+## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.4.1):
+1. **Loại bỏ triệt để hiện tượng cửa sổ chồng đè (Single-Window Page Switching)**:
+   - Loại bỏ hoàn toàn việc tạo cửa sổ con (`GUI.Window`) thứ hai độc lập gây tình trạng 2 lớp cửa sổ trong suốt đè lên nhau khiến chữ dính vào nhau và phải kéo rê thủ công.
+   - Chuyển sang cơ chế chuyển trang nội bộ (Inline Page View) ngay trong khung cửa sổ chính (`windowRect` 860x640):
+     - Khi bấm **[🎯 Chọn Tag ▾]**, giao diện lập tức chuyển mượt sang trang chọn danh mục dạng lưới 2 cột.
+     - Sau khi click chọn 1 danh mục, hệ thống tự động lưu cấu hình và quay trở lại danh sách hòm đồ ngay lập tức.
+     - Trang cấu hình có sẵn nút điều hướng lớn `[⬅ QUAY LẠI DANH SÁCH HÒM (Hủy Bỏ / Giữ Nguyên)]` để quay về bất kỳ lúc nào mà không cần kéo chuột.
+2. **Triệt tiêu hoàn toàn sự cố click xuyên chuột vào bàn chơi (Anti-Click-Through Patches)**:
+   - Tích hợp hàm kiểm tra tọa độ con trỏ chuột chính xác `SmartCategorySortController.IsPointerOverUI()` dựa trên chuyển đổi hệ trục tọa độ IMGUI (`mouseGui.y = Screen.height - Input.mousePosition.y`).
+   - Bổ sung 3 bộ lọc Harmony prefix:
+     - `CustomEventHandler.UpdateRayCast`: Vô hiệu hóa và xóa sạch kết quả dò tia (`___hasRayCast = false`, `___rayCastResult = null`) khi trỏ chuột nằm trong phạm vi menu.
+     - `StoreUIManager.CheckRaycast`: Chặn việc kích hoạt tương tác với vật phẩm hoặc bàn chơi của cửa hàng phía dưới menu.
+     - `ItemMouseDragHandler.StartDrag`: Chặn sự kiện bắt đầu kéo thả vật phẩm trong game khi đang thao tác nhấp chuột trên bảng menu.
+3. **Bao quát 100% 21 Danh Mục Tag Vật Phẩm**:
+   - Duy trì hệ thống 21 nhóm danh mục trích xuất trực tiếp từ mã nguồn và bộ dữ liệu game (Súng, Đạn dược, Y tế, Thực phẩm, Rượu bia, Thuốc lá/Hàng cấm, Áo giáp, Vật liệu chế tạo, v.v.).
+4. **Nén khít chặt tự động xoay 90° & bảo vệ kho khóa**:
    - Duy trì Harmony prefix `ForceSortAutoRotatePatch` tự động xoay item ngang/dọc nén khít chặt không còn khe hở.
-   - Duy trì đóng băng 100% kho bị khóa và kho lậu `hidden_stash`.
+   - Duy trì cơ chế khóa an toàn, bảo vệ hòm khóa và kho ẩn khỏi việc bị di chuyển vật phẩm ngoài ý muốn.
+5. **Đồng bộ kê khai quyền hạn (Manifest Declaration)**:
+   - Cập nhật phiên bản mod lên `1.4.1` trong cả mã nguồn `SmartInventorySortMod.cs` và tệp kê khai `manifest.xml`.
 
-*Cập nhật tự động: v1.4.0 | 2026-11-19 15:23*
+*Cập nhật tự động: v1.4.1 | 2026-11-19 15:56*

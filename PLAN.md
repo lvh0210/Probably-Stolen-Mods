@@ -73,3 +73,9 @@
   - [x] 15.4: Thiết kế lại toàn bộ giao diện F2 dạng Card hiện đại: căn chỉnh độ tương phản cao, badge trạng thái rõ nét, mở rộng kích thước 860x640 thoáng đãng
   - [x] 15.5: Thay thế `System.IO` bằng Unity `PlayerPrefs` nội bộ và khai báo đầy đủ `manifest.xml`, loại bỏ 100% cảnh báo bảo mật ModScanner
   - [x] 15.6: Biên dịch thư viện `SmartInventorySort.dll` (v1.4.0), triển khai vào game và đồng bộ Git
+- [x] **Chặng 16: Chuyển Đổi Trang Cùng Cửa Sổ (Single-Window Page Switching) & Chống Click Xuyên Chuột Vào Game (v1.4.1)**
+  - [x] 16.1: Thay thế popup cửa sổ thứ hai bằng cơ chế chuyển trang nội bộ (Inline View) trong cùng `windowRect` 860x640: bấm `[🎯 Chọn Tag ▾]` lập tức chuyển sang trang chọn danh mục, có nút lớn `[⬅ QUAY LẠI DANH SÁCH HÒM]`, chọn xong tự động quay lại mà không bị đè cửa sổ hay phải kéo chuột
+  - [x] 16.2: Triển khai 3 Harmony prefix chặn click chuột và kéo thả xuyên qua menu: `CustomEventHandler.UpdateRayCast`, `StoreUIManager.CheckRaycast`, và `ItemMouseDragHandler.StartDrag` dựa trên hàm kiểm tra tọa độ `IsPointerOverUI()`
+  - [x] 16.3: Cập nhật `manifest.xml` phiên bản 1.4.1 và biên dịch thành công `SmartInventorySort.dll` (v1.4.1)
+  - [x] 16.4: Triển khai vào thư mục game `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`
+  - [x] 16.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub

@@ -3,9 +3,9 @@
   <ID>SmartInventorySort</ID>
   <Name>Sắp Xếp &amp; Phân Loại Kho Thông Minh (Smart Category &amp; Inventory Sort)</Name>
   <Author>Antigravity</Author>
-  <ModVersion>1.4.0</ModVersion>
+  <ModVersion>1.4.1</ModVersion>
   <Description>Bộ công cụ tối ưu hóa kho hàng đa năng:
-1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu chọn hòm, F3: Gom &amp; Phân loại nhanh): Tự động quét và chuyển đồ về đúng hòm (Vũ khí, Y tế, Thực phẩm, Linh kiện...) dựa trên 21 danh mục hoàn chỉnh bao quát 100% item và tag game. Bấm nút [🎯 Chọn Tag ▾] để chọn danh mục trực tiếp từ popup 1-click.
+1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu chọn hòm, F3: Gom &amp; Phân loại nhanh): Tự động quét và chuyển đồ về đúng hòm (Vũ khí, Y tế, Thực phẩm, Linh kiện...) dựa trên 21 danh mục hoàn chỉnh bao quát 100% item và tag game. Bấm nút [🎯 Chọn Tag ▾] để mở trang chọn danh mục trực quan cùng cửa sổ (Single-Window Page Switching), không bị đè cửa sổ và chống click xuyên chuột vào game.
 2. Sắp xếp khít chặt: Vô hiệu hóa phân chia kệ ngang (PackShelves), kích hoạt quét từng ô (PackFirstFit) và tự động xoay ngang/dọc (Auto-Rotate 90°) giúp nén gọn, loại bỏ khoảng trống thừa và không bị đè chồng item.</Description>
   <GameVersions>
     <Version>0.46</Version>
