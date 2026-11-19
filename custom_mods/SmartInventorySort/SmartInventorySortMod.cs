@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
@@ -1212,33 +1211,19 @@ public class SmartCategorySortController : MonoBehaviour
     }
 
     // =========================================================================
-    // 7. LƯU & TẢI CẤU HÌNH GÁN HÒM (PERSISTENCE)
+    // 7. LƯU & TẢI CẤU HÌNH GÁN HÒM (PERSISTENCE QUA PLAYERPREFS NỘI BỘ AN TOÀN)
     // =========================================================================
-    private string GetConfigPath()
-    {
-        try
-        {
-            string dir = Path.Combine(Application.persistentDataPath, "ModConfigs");
-            if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
-            return Path.Combine(dir, "SmartInventoryCategoryConfig.txt");
-        }
-        catch
-        {
-            return "SmartInventoryCategoryConfig.txt";
-        }
-    }
-
     private void SaveAssignments()
     {
         try
         {
-            string path = GetConfigPath();
-            List<string> lines = new List<string>();
+            List<string> entries = new List<string>();
             foreach (var kvp in customAssignments)
             {
-                lines.Add(kvp.Key + "=" + kvp.Value);
+                entries.Add(kvp.Key + ":" + kvp.Value);
             }
-            File.WriteAllLines(path, lines.ToArray());
+            PlayerPrefs.SetString("SmartInventoryCategoryConfig", string.Join(";", entries.ToArray()));
+            PlayerPrefs.Save();
         }
         catch (Exception ex)
         {
@@ -1250,13 +1235,13 @@ public class SmartCategorySortController : MonoBehaviour
     {
         try
         {
-            string path = GetConfigPath();
-            if (File.Exists(path))
+            string data = PlayerPrefs.GetString("SmartInventoryCategoryConfig", "");
+            if (!string.IsNullOrEmpty(data))
             {
-                string[] lines = File.ReadAllLines(path);
-                foreach (var line in lines)
+                string[] entries = data.Split(';');
+                foreach (var entry in entries)
                 {
-                    string[] parts = line.Split('=');
+                    string[] parts = entry.Split(':');
                     if (parts.Length == 2)
                     {
                         int val;

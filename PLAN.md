@@ -71,4 +71,5 @@
   - [x] 15.2: Tích hợp hệ thống 21 danh mục hoàn chỉnh bao quát 100% vật phẩm (Súng, Đạn, Phụ kiện, Y tế, Rượu bia, Thuốc lá, Hàng cấm, Nội tạng, Mô-đun, Hạt giống...)
   - [x] 15.3: Thêm nút `[🎯 Chọn Tag ▾]` mở Modal Popup dạng lưới 2 cột cho phép chọn trực tiếp danh mục chỉ với 1 click
   - [x] 15.4: Thiết kế lại toàn bộ giao diện F2 dạng Card hiện đại: căn chỉnh độ tương phản cao, badge trạng thái rõ nét, mở rộng kích thước 860x640 thoáng đãng
-  - [x] 15.5: Biên dịch thư viện `SmartInventorySort.dll` (v1.4.0), triển khai vào game và đồng bộ Git
+  - [x] 15.5: Thay thế `System.IO` bằng Unity `PlayerPrefs` nội bộ và khai báo đầy đủ `manifest.xml`, loại bỏ 100% cảnh báo bảo mật ModScanner
+  - [x] 15.6: Biên dịch thư viện `SmartInventorySort.dll` (v1.4.0), triển khai vào game và đồng bộ Git
