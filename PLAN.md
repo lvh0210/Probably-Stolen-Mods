@@ -97,3 +97,9 @@
   - [x] 19.3: Thiết lập lá chắn bảo vệ chéo Master Safety Shield: phân định tuyệt đối Thực phẩm, Y tế, Hàng Cấm, Vật Liệu
   - [x] 19.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.5.2) và triển khai vào thư mục game
   - [x] 19.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub
+- [x] **Chặng 20: Lọc Bỏ Túi Hạt Giống, Hộp Viên Lọc Khỏi Danh Sách Kho F2 (v1.5.3)**
+  - [x] 20.1: Xây dựng bộ lọc `IsGeneralStorageContainer` phân định hòm chứa đồ thực thụ vs gói chứa 1 món
+  - [x] 20.2: Loại bỏ `PRE_CONTAINER_TAG`, `STORABLE_PACKAGE_TAG`, `AMMO_BOX_TAG` khỏi danh sách kho F2
+  - [x] 20.3: Áp dụng vào `GetAvailableInventories` và `ExecuteCategorySort`
+  - [x] 20.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.5.3) và triển khai vào game
+  - [x] 20.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub
