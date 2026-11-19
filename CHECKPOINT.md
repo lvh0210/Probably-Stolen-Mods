@@ -3,36 +3,30 @@
 - **Dự án**: Bộ Mod & Việt Hóa game Probably Stolen (Bản IMod Native)
 - **Thư mục lưu trữ**: `D:\VibeCode\Probably Stolen`
 - **Kho lưu trữ GitHub**: [https://github.com/lvh0210/Probably-Stolen-Mods](https://github.com/lvh0210/Probably-Stolen-Mods)
-- **Trạng thái**: Hoàn tất 100% cơ chế 1 hòm chọn nhiều Tag (Multi-Tag Selection), tách biệt 26 Tag độc lập nguyên bản, hệ thống thứ tự ưu tiên hòm (Container Priority) chống nhảy đồ qua lại và 11 cổng Harmony triệt tiêu hoàn toàn sự cố click xuyên chuột (`SmartInventorySort` v1.5.0).
+- **Trạng thái**: Hoàn tất 100% cơ chế phân loại đa Tag theo mức ưu tiên (Priority-Ranked Multi-Tag Sorting), khớp 1-Tag linh hoạt (không đòi hỏi chọn đủ mọi tag của item) và gom đồ từ bàn thao tác vào hòm riêng (`SmartInventorySort` v1.5.1).
 
-## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.5.0):
-1. **Cơ chế 1 Hòm chọn Nhiều Tag (Multi-Tag Selection)**:
-   - Thay thế việc chỉ gán 1 danh mục duy nhất bằng cơ chế cho phép tích chọn linh hoạt 1 hoặc nhiều Tag cùng lúc cho từng hòm đồ.
-   - Giao diện chọn Tag hiển thị nút toggle có dấu tick trực quan (`[✔] Tag Name` vs `[  ] Tag Name`).
-   - Bổ sung các công cụ thao tác 1 chạm: `[✅ Chọn Tất Cả (26 Tag)]`, `[❌ Bỏ Chọn Hết]`, `[🤖 Đặt Về Tự Động Theo Hòm]`, `[⛔ Đặt Khóa Hòm]`.
-   - Trên danh sách hòm đồ ở trang chính, hiển thị tóm tắt thông minh: `🎯 3 Tag: Súng, Đạn, Giáp`.
-2. **Tách biệt 26 Tag Đơn Lẻ Nguyên Bản (Không gộp nhóm)**:
-   - Bóc tách toàn diện các Tag độc lập: Súng, Cận chiến, Đạn dược, Thuốc nổ & C4, Phụ kiện súng, Y tế & Thuốc, Thực phẩm, Nước uống, Lọc nước, Rượu bia, Thuốc lá, Hàng cấm/Độc dược, Giáp & Đồ bảo hộ, Vật liệu chế tạo, Dụng cụ kỹ thuật, Tài liệu & Thẻ từ, Vé số & Vé cào, Nội tạng sinh học, Mô-đun & Chip, Pin & Năng lượng, Hạt giống & Nông sản, Đồ gia dụng, Nghệ thuật, Hòm chứa, Phế liệu, Kho chung.
-3. **Hệ thống Thứ Tự Ưu Tiên Hòm (Container Priority System)**:
-   - Cung cấp trường mức ưu tiên riêng cho từng hòm (`⭐ Ưu Tiên: 1`, 2, 3...) kèm nút tăng giảm nhanh `[▲]` / `[▼]` (Mức 1 là ưu tiên cao nhất).
-   - Thuật toán phân phối F3 hoạt động theo nguyên tắc đơn điệu ổn định tuyệt đối (Stability Rule):
-     - Sắp xếp các hòm đích theo mức ưu tiên (1 trước, rồi 2, 3...).
-     - Nếu vật phẩm mang nhiều Tag và đã nằm trong một hòm hợp lệ: Hệ thống **GIỮ NGUYÊN VẬT PHẨM TẠI CHỖ**, chỉ chuyển đi nếu tồn tại một hòm có độ ưu tiên cao hơn hẳn (`destPriority < currentPriority`) và còn chỗ trống.
-     - **Triệt tiêu 100% hiện tượng vật phẩm bị nhảy qua nhảy lại giữa các hòm trùng Tag** sau mỗi lần nhấn F3.
-4. **Bảo vệ toàn diện 11 Cổng chống Click Xuyên Chuột (Anti-Click-Through Patches)**:
-   - Thiết lập vùng nhận diện con trỏ chuột chính xác `IsPointerOverUI()` kèm viền đệm bảo vệ 5px.
-   - Tích hợp đồng thời 11 bộ lọc Harmony Prefix chặn toàn bộ sự kiện click, kéo thả và raycast trong game khi con trỏ chuột nằm trên menu F2:
-     - `InputActionHandler.UpdatePress` & `UpdateRelease`
-     - `ItemMouseHandler.OnEventPress`
-     - `ItemMouseDoubleClickHandler.OnEventPress`, `ClickAction`, `DoubleClickAction`
-     - `UIDragHandler.OnPointerDown`, `OnBeginDrag`
-     - `ItemMouseDragHandler.StartDrag`
-     - `StoreUIManager.CheckRaycast`
-     - `CustomEventHandler.UpdateRayCast`
-5. **Nén khít chặt tự động xoay 90° & Khóa an toàn**:
-   - Duy trì Harmony prefix `ForceSortAutoRotatePatch` tự động xoay item ngang/dọc nén khít chặt không còn khe hở.
-   - Duy trì cơ chế khóa an toàn, bảo vệ hòm khóa và kho ẩn khỏi việc bị di chuyển vật phẩm ngoài ý muốn.
-6. **Đồng bộ kê khai quyền hạn (Manifest Declaration)**:
-   - Cập nhật phiên bản mod lên `1.5.0` trong cả mã nguồn `SmartInventorySortMod.cs` và tệp kê khai `manifest.xml`.
+## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.5.1):
+1. **Khớp 1-Tag Linh Hoạt (Flexible Single-Tag Match)**:
+   - Sửa lỗi item không được sắp xếp khi hòm không chọn đủ toàn bộ tag của item.
+   - Giờ đây, hòm chỉ cần khớp **ít nhất 1 Tag** với món đồ là đủ điều kiện nhận đồ (`itemTags.Overlaps(SelectedTags)`). Người chơi không cần phải tìm và tích đủ tất cả các tag của món đồ.
+2. **Quy Tắc Ưu Tiên Tuyệt Đối Khi Item Có Nhiều Tag (Multi-Tag Priority Resolution)**:
+   - Khi một món đồ mang nhiều Tag (ví dụ: vừa có tag Súng vừa có tag Hàng Cấm):
+     - Hệ thống quét tất cả các hòm có chứa ít nhất 1 Tag của món đồ đó.
+     - Sắp xếp các hòm khớp theo **mức ưu tiên (Priority)**: Hòm có Priority 1 được xét trước, tiếp theo là 2, 3...
+     - Món đồ sẽ luôn được **ưu tiên xếp vào hòm có mức ưu tiên cao nhất**.
+     - Nếu hòm ưu tiên cao nhất đã đầy, món đồ sẽ tự động lùi xuống hòm ưu tiên tiếp theo có khớp tag.
+     - Nếu món đồ đã ở trong hòm ưu tiên cao nhất, hệ thống giữ nguyên vị trí ổn định, hoàn toàn không bị nhảy qua lại.
+3. **Phân Định Mức Ưu Tiên Mặc Định Thông Minh (Auto Hierarchy)**:
+   - Các hòm đồ riêng (`HasId == true`: Hòm an ninh, két sắt, hộp sơ cứu, hộp cơm...): Mặc định `Priority = 1` để người chơi tùy chỉnh.
+   - Bàn thao tác và kho nền tiệm (`HasId == false`: `main_inv`, kệ kính, hòm sau...): Mặc định `Priority = 99` (Kho đệm/xếp sau).
+   - Nhờ vậy, khi nhấn F3, tất cả đồ đạc bày trên bàn thao tác sẽ được tự động gom gọn và phân phối chính xác vào các hòm riêng theo mức ưu tiên.
+4. **Mở Rộng Nhận Diện Tag Toàn Diện**:
+   - Quét sâu cả `itemTypes`, `itemFeatures`, `state.dict`, `IsTag()` và so khớp từ khóa không phân biệt hoa thường.
+   - Bao quát 26 Tag đơn lẻ nguyên bản không gộp nhóm.
+5. **Chống Click Xuyên Chuột & Nén Khít Chặt 90°**:
+   - Duy trì toàn vẹn 11 cổng bảo vệ Harmony Prefix chống click chuột xuyên qua menu vào game.
+   - Duy trì tự động xoay ngang/dọc 90° lấp khít toàn bộ khoảng trống trong kho.
+6. **Đồng Bộ Phiên Bản**:
+   - Cập nhật phiên bản lên `1.5.1` trong `SmartInventorySortMod.cs` và `manifest.xml`.
 
-*Cập nhật tự động: v1.5.0 | 2026-11-19 22:51*
+*Cập nhật tự động: v1.5.1 | 2026-11-19 23:11*

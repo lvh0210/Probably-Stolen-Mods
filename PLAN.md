@@ -85,3 +85,9 @@
   - [x] 17.3: Xây dựng hệ thống thứ tự ưu tiên hòm (Container Priority System: 1, 2, 3...) kèm nút tăng giảm [▲]/[▼] và thuật toán phân phối đơn điệu chống hoàn toàn hiện tượng item nhảy qua nhảy lại giữa các hòm trùng tag
   - [x] 17.4: Triển khai 11 bộ lọc Harmony chặn triệt để click chuột xuyên qua menu vào game (InputActionHandler, ItemMouseHandler, ItemMouseDoubleClickHandler, UIDragHandler, StoreUIManager, CustomEventHandler)
   - [x] 17.5: Biên dịch thư viện `SmartInventorySort.dll` (v1.5.0), triển khai vào game, cập nhật tài liệu và đồng bộ Git
+- [x] **Chặng 18: Tối Ưu Xếp Hòm Theo Mức Ưu Tiên & Hỗ Trợ Khớp 1-Tag Linh Hoạt (v1.5.1)**
+  - [x] 18.1: Nâng cấp thuật toán phân phối: hòm chỉ cần khớp ít nhất 1 Tag là nhận đồ (không đòi hỏi phải chọn đủ toàn bộ tag của món đồ)
+  - [x] 18.2: Phân loại đa tag theo mức ưu tiên: nếu món đồ có nhiều tag thì luôn tự động ưu tiên xếp vào hòm có mức ưu tiên cao hơn (Priority 1 > 2 > 3...), hòm ưu tiên đầy mới lùi về hòm ưu tiên thấp hơn
+  - [x] 18.3: Phân định mức ưu tiên mặc định: hòm đồ riêng (HasId == true) ưu tiên 1, kho nền tiệm/bàn thao tác (HasId == false) ưu tiên 99 để đồ trên bàn luôn được gom gọn vào các hòm riêng
+  - [x] 18.4: Mở rộng bộ trích xuất Tag quét sâu cả `itemTypes`, `itemFeatures` và so khớp từ khóa không phụ thuộc chuỗi cứng
+  - [x] 18.5: Biên dịch `SmartInventorySort.dll` (v1.5.1), triển khai vào game, cập nhật tài liệu và đồng bộ Git

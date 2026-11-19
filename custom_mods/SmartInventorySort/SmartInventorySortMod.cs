@@ -8,9 +8,9 @@ using UnityEngine.EventSystems;
 using HarmonyLib;
 
 // =========================================================================
-// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.5.0)
+// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.5.1)
 // Tác giả: Antigravity AI (VibeCode)
-// Tính năng nâng cấp cốt lõi v1.5.0:
+// Tính năng nâng cấp cốt lõi v1.5.1:
 // 1. CHỐNG CLICK XUYÊN 100% AIRTIGHT: Chặn toàn diện 11 cổng xử lý sự kiện
 //    chuột (InputActionHandler, ItemMouseHandler, ItemMouseDoubleClickHandler,
 //    UIDragHandler, StoreUIManager, CustomEventHandler) khi chuột nằm trên menu F2.
@@ -42,7 +42,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.5.0 (Multi-Tag + Priority + Complete Anti-Clickthrough).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.5.1 (Multi-Tag + Priority + Complete Anti-Clickthrough).");
             }
 
             if (uiObject == null)
@@ -50,7 +50,7 @@ public class SmartInventorySortMod : IMod
                 uiObject = new GameObject("SmartCategorySortUI");
                 uiObject.AddComponent<SmartCategorySortController>();
                 UnityEngine.Object.DontDestroyOnLoad(uiObject);
-                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.5.0.");
+                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.5.1.");
             }
         }
         catch (Exception ex)
@@ -372,7 +372,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.skin.window.fontSize = 14;
 
         // VẼ 1 CỬA SỔ DUY NHẤT (Chống đè cửa sổ, chống kéo ra kéo vào)
-        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.5.0)");
+        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.5.1)");
     }
 
     private void DrawMainWindow(int windowId)
@@ -429,7 +429,7 @@ public class SmartCategorySortController : MonoBehaviour
         {
             if (ni.HasId || showAllStorages)
             {
-                ni.Config = GetConfig(ni.Id, ni.DefaultTagId);
+                ni.Config = GetConfig(ni.Id, ni.DefaultTagId, ni.HasId);
                 displayInventories.Add(ni);
             }
         }
@@ -771,26 +771,8 @@ public class SmartCategorySortController : MonoBehaviour
             // Gán cấu hình cho tất cả hòm
             foreach (var ni in inventories)
             {
-                ni.Config = GetConfig(ni.Id, ni.DefaultTagId);
+                ni.Config = GetConfig(ni.Id, ni.DefaultTagId, ni.HasId);
             }
-
-            // Danh sách các hòm đích có thể nhận đồ (không bị khóa)
-            // SẮP XẾP TĂNG DẦN THEO MỨC ƯU TIÊN: Priority 1 trước, sau đó 2, 3...
-            List<NamedInventory> candidateDests = new List<NamedInventory>();
-            foreach (var ni in inventories)
-            {
-                if (!ni.Config.IsLocked && ni.Inventory != null)
-                {
-                    candidateDests.Add(ni);
-                }
-            }
-
-            candidateDests.Sort((a, b) =>
-            {
-                int cmp = a.Config.Priority.CompareTo(b.Config.Priority);
-                if (cmp != 0) return cmp;
-                return string.Compare(a.Id, b.Id, StringComparison.Ordinal);
-            });
 
             int totalMoved = 0;
 
@@ -813,41 +795,65 @@ public class SmartCategorySortController : MonoBehaviour
 
                     HashSet<string> itemTags = GetItemTagIds(item);
 
-                    // Kiểm tra xem kho nguồn hiện tại có hợp lệ với item này không
-                    bool sourceAccepts = DoesContainerAcceptItem(sourceNI, itemTags);
-                    int currentPriority = sourceAccepts ? sourceNI.Config.Priority : 999999;
-
-                    // Tìm hòm đích tối ưu nhất
-                    // NGUYÊN TẮC ỔN ĐỊNH TUYỆT ĐỐI (STABILITY RULE):
-                    // Chỉ chuyển đồ nếu hòm đích có ĐỘ ƯU TIÊN CAO HƠN HẲN (destPriority < currentPriority)!
-                    // Nếu hòm hiện tại đã chấp nhận đồ này và không có hòm nào ưu tiên cao hơn còn chỗ -> GIỮ NGUYÊN TẠI CHỖ!
-                    foreach (var destNI in candidateDests)
+                    // 1. Tìm tất cả các hòm có thể nhận món đồ này (khớp ít nhất 1 Tag)
+                    List<NamedInventory> matchingDests = new List<NamedInventory>();
+                    foreach (var destNI in inventories)
                     {
-                        if (destNI == sourceNI) continue;
-
-                        if (destNI.Config.Priority >= currentPriority)
+                        if (destNI.Config.IsLocked || destNI.Inventory == null) continue;
+                        if (DoesContainerAcceptItem(destNI, itemTags))
                         {
-                            // Hòm đích có độ ưu tiên bằng hoặc thấp hơn hòm hiện tại -> DỪNG DUYỆT!
-                            // Không bao giờ chuyển đồ ngang hoặc ngược về hòm ưu tiên thấp hơn.
-                            break;
+                            matchingDests.Add(destNI);
                         }
+                    }
 
-                        if (!DoesContainerAcceptItem(destNI, itemTags)) continue;
-                        if (!CanContainerAcceptItem(destNI.Inventory, item)) continue;
+                    if (matchingDests.Count == 0) continue;
 
-                        // Thử chuyển đồ vào hòm đích
+                    // 2. Sắp xếp danh sách hòm đích theo thứ tự ưu tiên:
+                    // - Hòm khớp Tag chuyên biệt xếp trước Hòm Kho Chung (GENERAL)
+                    // - Priority nhỏ hơn đứng trước (1 > 2 > 3...)
+                    // - Hòm riêng (HasId == true) đứng trước Kho nền tiệm
+                    // - Id ổn định
+                    matchingDests.Sort((a, b) =>
+                    {
+                        bool aGeneral = (a.Config.IsAuto && a.DefaultTagId == "GENERAL") || (!a.Config.IsAuto && a.Config.SelectedTags.Contains("GENERAL") && a.Config.SelectedTags.Count == 1);
+                        bool bGeneral = (b.Config.IsAuto && b.DefaultTagId == "GENERAL") || (!b.Config.IsAuto && b.Config.SelectedTags.Contains("GENERAL") && b.Config.SelectedTags.Count == 1);
+                        if (aGeneral != bGeneral) return aGeneral ? 1 : -1;
+
+                        int cmp = a.Config.Priority.CompareTo(b.Config.Priority);
+                        if (cmp != 0) return cmp;
+
+                        if (a.HasId != b.HasId) return a.HasId ? -1 : 1;
+
+                        return string.Compare(a.Id, b.Id, StringComparison.Ordinal);
+                    });
+
+                    // 3. Vị trí hiện tại của món đồ
+                    int currentRank = matchingDests.IndexOf(sourceNI);
+
+                    // Nếu món đồ ĐÃ ở hòm số 1 (hòm ưu tiên cao nhất) -> GIỮ NGUYÊN!
+                    if (currentRank == 0) continue;
+
+                    // Thử chuyển đồ vào các hòm có thứ tự ưu tiên cao hơn vị trí hiện tại
+                    int limit = (currentRank > 0) ? currentRank : matchingDests.Count;
+
+                    for (int r = 0; r < limit; r++)
+                    {
+                        NamedInventory targetNI = matchingDests[r];
+                        if (targetNI == sourceNI) continue;
+                        if (!CanContainerAcceptItem(targetNI.Inventory, item)) continue;
+
                         sourceInv.Expel(item);
-                        destNI.Inventory.UncheckedAccept(item);
+                        targetNI.Inventory.UncheckedAccept(item);
 
-                        if (InventorySortHelper.Sort(destNI.Inventory, true, false))
+                        if (InventorySortHelper.Sort(targetNI.Inventory, true, false))
                         {
                             totalMoved++;
-                            break; // Đã chuyển thành công vào hòm ưu tiên cao nhất!
+                            break; // Thành công đưa vào hòm ưu tiên cao nhất có chỗ!
                         }
                         else
                         {
-                            // Hòm đích đã đầy, hoàn trả lại hòm nguồn và thử hòm tiếp theo
-                            destNI.Inventory.Expel(item);
+                            // Hòm này đã đầy, hoàn trả lại hòm nguồn và thử hòm ưu tiên tiếp theo
+                            targetNI.Inventory.Expel(item);
                             sourceInv.UncheckedAccept(item);
                         }
                     }
@@ -884,7 +890,7 @@ public class SmartCategorySortController : MonoBehaviour
             int count = 0;
             foreach (var ni in inventories)
             {
-                var cfg = GetConfig(ni.Id, ni.DefaultTagId);
+                var cfg = GetConfig(ni.Id, ni.DefaultTagId, ni.HasId);
                 if (cfg.IsLocked) continue;
 
                 if (ni.Inventory != null && ni.Inventory.childItems != null && ni.Inventory.childItems.Count > 0)
@@ -924,8 +930,8 @@ public class SmartCategorySortController : MonoBehaviour
     // Kiểm tra hòm có chấp nhận ít nhất một Tag của item hay không
     public bool DoesContainerAcceptItem(NamedInventory ni, HashSet<string> itemTags)
     {
-        if (ni == null || itemTags == null || itemTags.Count == 0) return false;
-        var cfg = ni.Config ?? GetConfig(ni.Id, ni.DefaultTagId);
+        if (ni == null) return false;
+        var cfg = ni.Config ?? GetConfig(ni.Id, ni.DefaultTagId, ni.HasId);
         if (cfg.IsLocked) return false;
 
         // Chế độ Tự Động theo hòm
@@ -933,15 +939,18 @@ public class SmartCategorySortController : MonoBehaviour
         {
             if (string.IsNullOrEmpty(ni.DefaultTagId)) return false;
             if (ni.DefaultTagId == "GENERAL") return true;
-            return itemTags.Contains(ni.DefaultTagId);
+            return itemTags != null && itemTags.Contains(ni.DefaultTagId);
         }
 
-        // Chế độ Chọn Nhiều Tag
+        // Chế độ Chọn Nhiều Tag: Nếu có chọn Kho Chung thì nhận tất cả
         if (cfg.SelectedTags.Contains("GENERAL")) return true;
 
-        foreach (var t in itemTags)
+        if (itemTags != null && itemTags.Count > 0)
         {
-            if (cfg.SelectedTags.Contains(t)) return true;
+            foreach (var t in itemTags)
+            {
+                if (cfg.SelectedTags.Contains(t)) return true;
+            }
         }
 
         return false;
@@ -961,21 +970,36 @@ public class SmartCategorySortController : MonoBehaviour
         {
             foreach (var t in types)
             {
-                if (string.IsNullOrEmpty(t)) continue;
-                AddMatchingTagIds(t.ToUpperInvariant(), tags);
+                if (!string.IsNullOrEmpty(t)) AddMatchingTagIds(t, tags);
             }
         }
 
-        // 2. Kiểm tra item.state
+        // 2. Kiểm tra itemTypes & itemFeatures
+        if (item.itemTypes != null)
+        {
+            foreach (var it in item.itemTypes)
+            {
+                if (!string.IsNullOrEmpty(it)) AddMatchingTagIds(it, tags);
+            }
+        }
+        if (item.itemFeatures != null)
+        {
+            foreach (var feat in item.itemFeatures)
+            {
+                if (feat != null) AddMatchingTagIds(feat.ToString(), tags);
+            }
+        }
+
+        // 3. Kiểm tra item.state
         if (item.state != null && item.state.dict != null)
         {
             foreach (var k in item.state.dict.Keys)
             {
-                if (k != null) AddMatchingTagIds(k.ToString().ToUpperInvariant(), tags);
+                if (k != null) AddMatchingTagIds(k.ToString(), tags);
             }
         }
 
-        // 3. Kiểm tra IsTag trực tiếp
+        // 4. Kiểm tra IsTag trực tiếp
         if (item.IsTag("FIREARM") || item.IsTag("ADV_GUN_TAG")) tags.Add("GUN");
         if (item.IsTag("MELEE_WEAPON")) tags.Add("MELEE");
         if (item.IsTag("WEAPON") && !tags.Contains("MELEE")) tags.Add("GUN");
@@ -1003,7 +1027,7 @@ public class SmartCategorySortController : MonoBehaviour
         if (item.IsTag("CONTAINER_TAG") || item.IsTag("SUPPLY_CRATE") || item.IsTag("STORAGE") || item.IsTag("SAFE_TAG") || item.IsTag("POUCH_TAG") || item.IsTag("STORABLE_PACKAGE_TAG") || item.IsTag("LIQUID_CONTAINER_TAG") || item.IsTag("CAGE_TAG")) tags.Add("CONTAINER");
         if (item.IsTag("JUNK")) tags.Add("JUNK");
 
-        // 4. Fallback nhận diện theo tên / identifier
+        // 5. Fallback nhận diện theo tên / identifier
         string id = (item.identifier ?? "").ToLowerInvariant();
         string name = (item.name ?? "").ToLowerInvariant();
 
@@ -1040,33 +1064,34 @@ public class SmartCategorySortController : MonoBehaviour
     private static void AddMatchingTagIds(string rawTag, HashSet<string> tags)
     {
         if (string.IsNullOrEmpty(rawTag)) return;
+        string t = rawTag.ToUpperInvariant();
 
-        if (rawTag == "FIREARM" || rawTag == "ADV_GUN_TAG" || rawTag == "LOWTECH" || rawTag == "MIDLINE" || rawTag == "MODDABLE") tags.Add("GUN");
-        else if (rawTag == "MELEE_WEAPON") tags.Add("MELEE");
-        else if (rawTag == "WEAPON") { if (!tags.Contains("MELEE")) tags.Add("GUN"); }
-        else if (rawTag == "AMMUNITION" || rawTag == "MUNITION" || rawTag == "AMMO_BOX_TAG" || rawTag == "AMMO_TYPE_TAG") tags.Add("AMMO");
-        else if (rawTag == "EXPLOSIVE") tags.Add("EXPLOSIVE");
-        else if (rawTag == "GUN_MOD" || rawTag == "GUN_CALIBER_TAG" || rawTag == "GUN_SUPPRESSED_TAG" || rawTag == "MAKESHIFT") tags.Add("ATTACHMENT");
-        else if (rawTag == "MEDICAL" || rawTag == "MEDICAL_TOOL" || rawTag == "ITEM_MEDICAL_TAG" || rawTag == "MEDICAL_PROFICIENCY") tags.Add("MEDICAL");
-        else if (rawTag == "FOOD" || rawTag == "PROCESSED_FOOD" || rawTag == "TREAT" || rawTag == "MEAT_FOOD_TAG" || rawTag == "FRESH_FOOD_TAG" || rawTag == "CANNED_FOOD_TAG") tags.Add("FOOD");
-        else if (rawTag == "WATER" || rawTag == "WATER_RATION" || rawTag == "BREVAGE") tags.Add("DRINK");
-        else if (rawTag == "WATER_PURIFICATION_SUPPLY" || rawTag == "WATER_PURIFICATION_TABLET" || rawTag == "FILTER" || rawTag == "WATER_FILTER") tags.Add("WATER_FILTER");
-        else if (rawTag == "ALCOHOL" || rawTag == "WINE_CONTAINER_TAG") tags.Add("ALCOHOL");
-        else if (rawTag == "CIGARETTE_TAG") tags.Add("TOBACCO");
-        else if (rawTag == "NARCOTIC" || rawTag == "SUBSTANCE" || rawTag == "POISON" || rawTag == "CONTRABAND") tags.Add("CONTRABAND");
-        else if (rawTag == "ARMOR" || rawTag == "TACTICAL_EQUIPMENT_TAG" || rawTag == "ARMORED") tags.Add("ARMOR");
-        else if (rawTag == "MATERIAL" || rawTag == "BASIC_MATERIAL" || rawTag == "CONSTRUCTION_MATERIAL_TAG" || rawTag == "SCRAP_METAL" || rawTag == "ORE_TAG" || rawTag == "CHEMICAL_SUPPLIES") tags.Add("MATERIAL");
-        else if (rawTag == "TOOL" || rawTag == "TECHNICAL_EQUIPMENT_TAG" || rawTag == "TOOLBOX_TAG" || rawTag == "MAGNIFYING_GLASS" || rawTag == "LABELER") tags.Add("TOOL");
-        else if (rawTag == "DOCUMENT" || rawTag == "ACCESS_CARD" || rawTag == "GUIDE_PAPER_TAG" || rawTag == "NAV_DISK_TAG") tags.Add("DOCUMENT");
-        else if (rawTag == "LOTTERY" || rawTag == "LOTTERY_PAPER_TAG") tags.Add("LOTTERY");
-        else if (rawTag == "ORGAN" || rawTag == "ORGAN_ITEM_TAG" || rawTag == "ORGANIC_ORGAN_TAG" || rawTag == "ORGAN_TRANSPORT_CONTAINER_TAG") tags.Add("ORGAN");
-        else if (rawTag == "MODULE" || rawTag == "MACHINE" || rawTag.StartsWith("MODULE_TYPE_") || rawTag == "NODE") tags.Add("MODULE");
-        else if (rawTag == "ENERGY_CELL" || rawTag == "POWERBLOCK" || rawTag == "HYPERTECH_BATTERY_TAG") tags.Add("ENERGY");
-        else if (rawTag == "SEED" || rawTag == "SEED_ITEM_TAG" || rawTag == "FARMING_SUPPLIES") tags.Add("SEED");
-        else if (rawTag == "HOUSEHOLD_GOOD" || rawTag == "LUXURY_ITEM") tags.Add("HOUSEHOLD");
-        else if (rawTag == "ART") tags.Add("ART");
-        else if (rawTag == "CONTAINER_TAG" || rawTag == "SUPPLY_CRATE" || rawTag == "STORAGE" || rawTag == "SAFE_TAG" || rawTag == "POUCH_TAG") tags.Add("CONTAINER");
-        else if (rawTag == "JUNK") tags.Add("JUNK");
+        if (t.Contains("GUN") || t == "FIREARM" || t.Contains("PISTOL") || t.Contains("RIFLE") || t.Contains("SHOTGUN") || t.Contains("SMG") || t == "ADV_GUN_TAG" || t == "LOWTECH" || t == "MIDLINE" || t == "MODDABLE") tags.Add("GUN");
+        if (t.Contains("MELEE") || t.Contains("KNIFE") || t.Contains("SWORD") || t.Contains("BAT") || t.Contains("SHIV") || t.Contains("CROWBAR") || t.Contains("PIPE")) tags.Add("MELEE");
+        if (t == "WEAPON" && !tags.Contains("MELEE")) tags.Add("GUN");
+        if (t.Contains("AMMO") || t == "AMMUNITION" || t == "MUNITION" || t.Contains("BULLET") || t.Contains("ROUND") || t.Contains("MAG")) tags.Add("AMMO");
+        if (t.Contains("EXPLOSIVE") || t.Contains("GRENADE") || t.Contains("C4") || t.Contains("BOMB") || t.Contains("MINE")) tags.Add("EXPLOSIVE");
+        if (t.Contains("MOD") || t.Contains("ATTACH") || t.Contains("SILENCER") || t.Contains("SIGHT") || t.Contains("SCOPE") || t == "MAKESHIFT") tags.Add("ATTACHMENT");
+        if (t.Contains("MED") || t.Contains("PILL") || t.Contains("BANDAGE") || t.Contains("FIRSTAID") || t.Contains("HEAL") || t.Contains("STIM") || t.Contains("CURE") || t.Contains("PHAGI") || t.Contains("BICARSOLE")) tags.Add("MEDICAL");
+        if (t.Contains("FOOD") || t.Contains("MEAT") || t.Contains("BREAD") || t.Contains("CHEESE") || t.Contains("FISH") || t.Contains("SNACK") || t == "TREAT" || t.Contains("EGG")) tags.Add("FOOD");
+        if (t.Contains("WATER") || t.Contains("DRINK") || t.Contains("BREVAGE") || t.Contains("JUICE") || t.Contains("MILK") || t.Contains("SODA") || t.Contains("PITCHER") || t.Contains("BOTTLE")) tags.Add("DRINK");
+        if (t.Contains("FILTER") || t.Contains("PURIF")) tags.Add("WATER_FILTER");
+        if (t.Contains("ALCOHOL") || t.Contains("WINE") || t.Contains("BEER") || t.Contains("VODKA") || t.Contains("NUDKA")) tags.Add("ALCOHOL");
+        if (t.Contains("CIGAR") || t.Contains("SMOKE") || t.Contains("TOBACCO")) tags.Add("TOBACCO");
+        if (t.Contains("NARCOTIC") || t.Contains("SUBSTANCE") || t.Contains("POISON") || t.Contains("CONTRABAND") || t.Contains("DRUG") || t.Contains("FENTANYL") || t.Contains("ZYANIDE")) tags.Add("CONTRABAND");
+        if (t.Contains("ARMOR") || t.Contains("HELMET") || t.Contains("VEST") || t.Contains("SHIELD") || t.Contains("PLATE") || t.Contains("TACTICAL")) tags.Add("ARMOR");
+        if (t.Contains("MATERIAL") || t.Contains("INGOT") || t.Contains("METAL") || t.Contains("ORE") || t.Contains("WIRE") || t.Contains("PLASTIC") || t.Contains("SCRAP") || t.Contains("NUT") || t.Contains("SCREW")) tags.Add("MATERIAL");
+        if (t.Contains("TOOL") || t.Contains("CUTTER") || t.Contains("WRENCH") || t.Contains("SCANNER") || t.Contains("ANALYSER") || t.Contains("LABELER")) tags.Add("TOOL");
+        if (t.Contains("DOC") || t.Contains("CARD") || t.Contains("BOOK") || t.Contains("PAPER") || t.Contains("INTEL") || t.Contains("DISK")) tags.Add("DOCUMENT");
+        if (t.Contains("LOTTERY") || t.Contains("TICKET")) tags.Add("LOTTERY");
+        if (t.Contains("ORGAN") || t.Contains("HEART") || t.Contains("LIVER") || t.Contains("KIDNEY") || t.Contains("EYE") || t.Contains("TISSUE")) tags.Add("ORGAN");
+        if (t.Contains("MODULE") || t.Contains("MACHINE") || t.Contains("ENGINE") || t.Contains("PUMP") || t.Contains("CHIP") || t.Contains("NODE")) tags.Add("MODULE");
+        if (t.Contains("ENERGY") || t.Contains("CELL") || t.Contains("BATTERY") || t.Contains("POWER")) tags.Add("ENERGY");
+        if (t.Contains("SEED") || t.Contains("PLANT") || t.Contains("FARM") || t.Contains("CROP")) tags.Add("SEED");
+        if (t.Contains("HOUSEHOLD") || t.Contains("LUXURY") || t.Contains("TAMPON") || t.Contains("SHAMPOO") || t.Contains("TOWEL") || t.Contains("SOAP") || t.Contains("PERFUME")) tags.Add("HOUSEHOLD");
+        if (t.Contains("ART") || t.Contains("CASSETTE") || t.Contains("MUSIC") || t.Contains("STATUE") || t.Contains("TOY")) tags.Add("ART");
+        if (t.Contains("CONTAINER") || t.Contains("CRATE") || t.Contains("STORAGE") || t.Contains("SAFE") || t.Contains("POUCH") || t.Contains("BAG") || t.Contains("BOX") || t.Contains("CASE")) tags.Add("CONTAINER");
+        if (t.Contains("JUNK") || t.Contains("WASTE") || t.Contains("TRASH") || t.Contains("RUBBISH")) tags.Add("JUNK");
     }
 
     // =========================================================================
@@ -1297,7 +1322,7 @@ public class SmartCategorySortController : MonoBehaviour
     // =========================================================================
     // 7. LƯU & TẢI CẤU HÌNH (PERSISTENCE QUA PLAYERPREFS NỘI BỘ AN TOÀN)
     // =========================================================================
-    public ContainerConfig GetConfig(string containerId, string defaultTagId)
+    public ContainerConfig GetConfig(string containerId, string defaultTagId, bool hasId = true)
     {
         if (string.IsNullOrEmpty(containerId)) return new ContainerConfig();
 
@@ -1310,8 +1335,15 @@ public class SmartCategorySortController : MonoBehaviour
                 cfg.IsLocked = true;
                 cfg.Priority = 99;
             }
+            else if (!hasId)
+            {
+                // Kho nền tiệm (Bàn thao tác, kệ kính, quầy thu ngân...) mặc định ưu tiên 99 để nhường đồ cho hòm riêng
+                cfg.IsAuto = true;
+                cfg.Priority = 99;
+            }
             else
             {
+                // Hòm đồ riêng (Hòm an ninh, két sắt, hộp cơm...) mặc định ưu tiên 1
                 cfg.IsAuto = true;
                 cfg.Priority = 1;
                 if (!string.IsNullOrEmpty(defaultTagId) && defaultTagId != "GENERAL")
