@@ -66,3 +66,9 @@
   - [x] 14.2: Lọc giao diện menu F2 chỉ hiển thị các hòm đồ thực sự có ID (`HasId == true`), ẩn toàn bộ kho nền tĩnh tránh gây rối mắt
   - [x] 14.3: Biên dịch thư viện `SmartInventorySort.dll` (v1.3.1) và triển khai thành công vào game
   - [x] 14.4: Cập nhật tài liệu, kiểm thử và đồng bộ mã nguồn lên GitHub
+- [x] **Chặng 15: Nâng Cấp 21 Danh Mục Tag Toàn Diện, Popup Selector & Tối Ưu Giao Diện F2 (v1.4.0)**
+  - [x] 15.1: Khảo sát IL và trích xuất toàn bộ 61+ itemTypes và các tag thực tế trong game
+  - [x] 15.2: Tích hợp hệ thống 21 danh mục hoàn chỉnh bao quát 100% vật phẩm (Súng, Đạn, Phụ kiện, Y tế, Rượu bia, Thuốc lá, Hàng cấm, Nội tạng, Mô-đun, Hạt giống...)
+  - [x] 15.3: Thêm nút `[🎯 Chọn Tag ▾]` mở Modal Popup dạng lưới 2 cột cho phép chọn trực tiếp danh mục chỉ với 1 click
+  - [x] 15.4: Thiết kế lại toàn bộ giao diện F2 dạng Card hiện đại: căn chỉnh độ tương phản cao, badge trạng thái rõ nét, mở rộng kích thước 860x640 thoáng đãng
+  - [x] 15.5: Biên dịch thư viện `SmartInventorySort.dll` (v1.4.0), triển khai vào game và đồng bộ Git
