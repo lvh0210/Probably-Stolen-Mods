@@ -91,3 +91,9 @@
   - [x] 18.3: Phân định mức ưu tiên mặc định: hòm đồ riêng (HasId == true) ưu tiên 1, kho nền tiệm/bàn thao tác (HasId == false) ưu tiên 99 để đồ trên bàn luôn được gom gọn vào các hòm riêng
   - [x] 18.4: Mở rộng bộ trích xuất Tag quét sâu cả `itemTypes`, `itemFeatures` và so khớp từ khóa không phụ thuộc chuỗi cứng
   - [x] 18.5: Biên dịch `SmartInventorySort.dll` (v1.5.1), triển khai vào game, cập nhật tài liệu và đồng bộ Git
+- [x] **Chặng 19: Khắc Phục Triệt Để Phân Loại Tag Sai Cho Hàng Cấm & Vật Liệu (v1.5.2)**
+  - [x] 19.1: Loại bỏ `SUBSTANCE` & `DRUG` khỏi `CONTRABAND`, bỏ quét `item.state.dict.Keys` gây dính runtime tags
+  - [x] 19.2: Tinh chỉnh nhận diện `MATERIAL` (loại bỏ `nut` làm dính Nutrifruit, bỏ `plastic` làm dính y tế)
+  - [x] 19.3: Thiết lập lá chắn bảo vệ chéo Master Safety Shield: phân định tuyệt đối Thực phẩm, Y tế, Hàng Cấm, Vật Liệu
+  - [x] 19.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.5.2) và triển khai vào thư mục game
+  - [x] 19.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub
