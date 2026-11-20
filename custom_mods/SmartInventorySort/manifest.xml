@@ -3,7 +3,7 @@
   <ID>SmartInventorySort</ID>
   <Name>Sắp Xếp &amp; Phân Loại Kho Thông Minh (Smart Category &amp; Inventory Sort)</Name>
   <Author>Antigravity</Author>
-  <ModVersion>1.5.3</ModVersion>
+  <ModVersion>1.5.4</ModVersion>
   <Description>Bộ công cụ tối ưu hóa kho hàng đa năng:
 1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu cấu hình hòm, F3: Gom &amp; Phân loại nhanh):
 - Tự động lọc bỏ các gói/hộp chứa chuyên biệt 1 món (túi hạt giống, hộp viên lọc nước, hộp que thử, hộp đạn, két bia...) khỏi danh sách kho Menu F2, chỉ giữ lại hòm chứa thực thụ (ba lô, két, rương, hòm đồ, hốc giấu, kho phụ tiệm).

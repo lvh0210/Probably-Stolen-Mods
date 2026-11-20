@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,8 +10,10 @@ using HarmonyLib;
 // =========================================================================
 // SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.5.3)
 // Tác giả: Antigravity AI (VibeCode)
-// Tính năng nâng cấp cốt lõi v1.5.3:
+// Tính năng nâng cấp cốt lõi v1.5.4:
 // 1. BỘ LỌC HÒM CHỨA ĐỒ THỰC THỤ (IsGeneralStorageContainer): Tự động loại bỏ
+// 2. TÁCH TAG ADDICTIVE: Phân định rõ ràng chất gây nghiện hợp pháp (rượu/thuốc lá/kích thích)
+//    với hàng cấm thực sự (CONTRABAND/RESTRICTED/TRAFFICKING)
 //    toàn bộ các gói/hộp chứa 1 món đồ chuyên biệt (túi hạt giống, hộp viên lọc
 //    nước, que thử, hộp đạn, két bia, bao thuốc lá...) khỏi danh sách kho Menu F2!
 // 2. PHÂN LOẠI CHUẨN XÁC 100% THEO GAMEITEMTYPE & LÁ CHẮN MASTER SAFETY SHIELD.
@@ -37,7 +39,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.5.3 (Filter Out Restricted Packets + Multi-Tag + Priority).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.5.4 (Tách Tag Gây Nghiện ADDICTIVE ra khỏi CONTRABAND).");
             }
 
             if (uiObject == null)
@@ -310,6 +312,7 @@ public class SmartCategorySortController : MonoBehaviour
         new ItemTagDef("ALCOHOL", "🍾 Rượu Bia & Đồ Uống Cồn", "Rượu"),
         new ItemTagDef("TOBACCO", "🚬 Thuốc Lá & Xì Gà", "Thuốc Lá"),
         new ItemTagDef("CONTRABAND", "☠️ Hàng Cấm & Độc Dược", "Hàng Cấm"),
+        new ItemTagDef("ADDICTIVE", "💉 Chất Gây Nghiện (Ma Túy/Chất Cấm)", "Gây Nghiện"),
         new ItemTagDef("ARMOR", "🛡️ Giáp, Mũ & Đồ Bảo Hộ", "Giáp"),
         new ItemTagDef("MATERIAL", "🔩 Vật Liệu & Kim Loại Chế Tạo", "Vật Liệu"),
         new ItemTagDef("TOOL", "🛠️ Dụng Cụ & Công Cụ Kỹ Thuật", "Dụng Cụ"),
@@ -993,7 +996,10 @@ public class SmartCategorySortController : MonoBehaviour
         if (item.IsTag("WATER_PURIFICATION_SUPPLY") || item.IsTag("WATER_PURIFICATION_TABLET") || item.IsTag("FILTER") || item.IsTag("WATER_FILTER") || item.IsTag("WATER_TESTING_STRIP_TAG")) tags.Add("WATER_FILTER");
         if (item.IsTag("ALCOHOL") || item.IsTag("WINE_CONTAINER_TAG") || item.IsTag("RED_IMP_BEER_TAG") || item.IsTag("WINEMAKER")) tags.Add("ALCOHOL");
         if (item.IsTag("CIGARETTE_TAG") || item.IsTag("ZHONGHUA")) tags.Add("TOBACCO");
-        if (item.IsTag("CONTRABAND") || item.IsTag("CONTRABAND_ITEM_TAG") || item.IsTag("NARCOTIC") || item.IsTag("POISON") || item.IsTag("RESTRICTED_1") || item.IsTag("RESTRICTED_2") || item.IsTag("RESTRICTED_3") || item.IsTag("TRAFFICKING")) tags.Add("CONTRABAND");
+        // Hàng Cấm chính thức: vũ khí lậu, hàng cấm xuất nhập khẩu, độc chất thực sự
+        if (item.IsTag("CONTRABAND") || item.IsTag("CONTRABAND_ITEM_TAG") || item.IsTag("RESTRICTED_1") || item.IsTag("RESTRICTED_2") || item.IsTag("RESTRICTED_3") || item.IsTag("TRAFFICKING") || item.IsTag("POISON")) tags.Add("CONTRABAND");
+        // Chất gây nghiện: NARCOTIC có thể là rượu/thuốc lá gây nghiện hợp pháp — xử lý riêng bên dưới (Master Safety Shield)
+        if (item.IsTag("NARCOTIC")) tags.Add("ADDICTIVE");
         if (item.IsTag("ARMOR") || item.IsTag("TACTICAL_EQUIPMENT_TAG") || item.IsTag("ARMORED")) tags.Add("ARMOR");
         if (item.IsTag("MATERIAL") || item.IsTag("BASIC_MATERIAL") || item.IsTag("REFINED_MATERIAL") || item.IsTag("MATERIAL_TAG") || item.IsTag("CONSTRUCTION_MATERIAL_TAG") || item.IsTag("PRINTER_MATERIAL_TAG") || item.IsTag("SCRAP_METAL") || item.IsTag("ORE_TAG")) tags.Add("MATERIAL");
         if (item.IsTag("TOOL") || item.IsTag("TOOLBOX_ITEM_TAG") || item.IsTag("TOOLBOX_TAG") || item.IsTag("SALVAGE_TOOL_TAG") || item.IsTag("TECHNICAL_EQUIPMENT_TAG") || item.IsTag("MAGNIFYING_GLASS") || item.IsTag("LABELER")) tags.Add("TOOL");
@@ -1042,8 +1048,10 @@ public class SmartCategorySortController : MonoBehaviour
         // Thuốc Lá
         if (id.Contains("cigar") || id.Contains("smoke") || id.Contains("tobacco") || id.Contains("cigarette")) tags.Add("TOBACCO");
 
-        // Hàng Cấm & Độc Dược: Chỉ nhận chất cấm thực sự
-        if (id.Contains("contraband") || id.Contains("narcotic") || id.Contains("fentanyl") || id.Contains("zyanide") || id.Contains("fanta_pill") || id.Contains("dream_dust") || id.Contains("nightmare_dust")) tags.Add("CONTRABAND");
+        // Hàng Cấm: Các chất bị pháp luật cấm hoàn toàn (vũ khí lậu, độc dược, chất cấm phân phối)
+        if (id.Contains("contraband") || id.Contains("fentanyl") || id.Contains("zyanide") || id.Contains("fanta_pill") || id.Contains("dream_dust") || id.Contains("nightmare_dust")) tags.Add("CONTRABAND");
+        // Chất Gây Nghiện: Ma túy, chất kích thần kinh không phân loại rõ ràng là hàng cấm hay y tế
+        if (id.Contains("narcotic") || id.Contains("stimulant") || id.Contains("stim_pack") || id.Contains("rush_pill") || id.Contains("high_pill") || id.Contains("euphoria")) tags.Add("ADDICTIVE");
 
         // Giáp
         if (id.Contains("armor") || id.Contains("helmet") || id.Contains("vest") || id.Contains("shield") || id.Contains("plate")) tags.Add("ARMOR");
@@ -1131,6 +1139,33 @@ public class SmartCategorySortController : MonoBehaviour
             }
         }
 
+        // d) Phân loại ADDICTIVE hợp lệ vs CONTRABAND thực sự
+        // Nếu item có ADDICTIVE (do NARCOTIC tag) nhưng lại cũng thuộc ALCOHOL hoặc TOBACCO
+        // → Đây là chất gây nghiện hợp pháp (rượu, thuốc lá, chất kích thích thông thường) → XÓA khỏi CONTRABAND
+        if (tags.Contains("ADDICTIVE"))
+        {
+            bool isOfficiallyBanned = item.IsTag("CONTRABAND") || item.IsTag("CONTRABAND_ITEM_TAG") ||
+                                      item.IsTag("RESTRICTED_1") || item.IsTag("RESTRICTED_2") || item.IsTag("RESTRICTED_3") ||
+                                      item.IsTag("TRAFFICKING");
+            bool isLegalSubstance = tags.Contains("ALCOHOL") || tags.Contains("TOBACCO") || tags.Contains("MEDICAL") || tags.Contains("FOOD");
+            if (!isOfficiallyBanned)
+            {
+                // Hợp pháp: giữ ADDICTIVE, xóa CONTRABAND nhầm
+                tags.Remove("CONTRABAND");
+                if (isLegalSubstance)
+                {
+                    // Rượu/thuốc lá gây nghiện nhưng hợp pháp → không cần đánh thêm ADDICTIVE riêng
+                    tags.Remove("ADDICTIVE");
+                }
+            }
+            else
+            {
+                // Bất hợp pháp: giữ CONTRABAND, xóa ADDICTIVE riêng (đã gộp vào CONTRABAND)
+                tags.Remove("ADDICTIVE");
+                if (!tags.Contains("CONTRABAND")) tags.Add("CONTRABAND");
+            }
+        }
+
         if (tags.Count == 0) tags.Add("GENERAL");
         return tags;
     }
@@ -1146,7 +1181,8 @@ public class SmartCategorySortController : MonoBehaviour
         if (t == "FILTER" || t == "WATER_FILTER" || t == "WATER_PURIFICATION_SUPPLY") { tags.Add("WATER_FILTER"); return; }
         if (t == "ALCOHOL") { tags.Add("ALCOHOL"); return; }
         if (t == "CIGARETTE_TAG" || t == "TOBACCO") { tags.Add("TOBACCO"); return; }
-        if (t == "CONTRABAND" || t == "RESTRICTED_1" || t == "RESTRICTED_2" || t == "RESTRICTED_3" || t == "NARCOTIC" || t == "POISON") { tags.Add("CONTRABAND"); return; }
+        if (t == "CONTRABAND" || t == "RESTRICTED_1" || t == "RESTRICTED_2" || t == "RESTRICTED_3" || t == "POISON" || t == "TRAFFICKING") { tags.Add("CONTRABAND"); return; }
+        if (t == "NARCOTIC" || t == "ADDICTIVE") { tags.Add("ADDICTIVE"); return; }
         if (t == "MEDICAL" || t == "MEDICAL_TOOL" || t == "ITEM_MEDICAL_TAG") { tags.Add("MEDICAL"); return; }
         if (t == "FIREARM" || t == "MODDABLE" || (t == "WEAPON" && !tags.Contains("MELEE"))) { tags.Add("GUN"); return; }
         if (t == "MELEE_WEAPON" || t == "MELEE") { tags.Add("MELEE"); return; }

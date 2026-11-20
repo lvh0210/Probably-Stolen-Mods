@@ -1,0 +1,194 @@
+{
+  "analyze_client_demand.py": {
+    "mtime": 1794647113.800103,
+    "seen": 1795107070.4545362,
+    "ast_hash": "8e2e0c93ec0637a3ae0805f8ce0d528f",
+    "semantic_hash": ""
+  },
+  "analyze_extra_perks.py": {
+    "mtime": 1794646977.4500456,
+    "seen": 1795107070.4545362,
+    "ast_hash": "95acc1d527fb8a586aa7479b4abf9f8b",
+    "semantic_hash": ""
+  },
+  "backup_baishe.ps1": {
+    "mtime": 1794934551.6519792,
+    "seen": 1795107070.4545362,
+    "ast_hash": "701a8dc46b2211a54b41cce8bd0ca16a",
+    "semantic_hash": ""
+  },
+  "build_augmented_detector.ps1": {
+    "mtime": 1794934218.054661,
+    "seen": 1795107070.4545362,
+    "ast_hash": "d8fb6c1519340bc3a9a4968d53a41a9b",
+    "semantic_hash": ""
+  },
+  "build_lottery_foresight.ps1": {
+    "mtime": 1794985590.2191324,
+    "seen": 1795107070.4545362,
+    "ast_hash": "82b4eef7cbc98f5d3a4740e7e8c59621",
+    "semantic_hash": ""
+  },
+  "build_smart_sort.ps1": {
+    "mtime": 1795103275.430979,
+    "seen": 1795107070.4545362,
+    "ast_hash": "b17ec854a0caf275dec8c71ce9f00e14",
+    "semantic_hash": ""
+  },
+  "custom_mods/AlwaysHighlightCustomerDemand/CustomerDemandHighlightMod.cs": {
+    "mtime": 1794648225.4817386,
+    "seen": 1795107070.4545362,
+    "ast_hash": "279b0a6b766eedb033f8ca8f7fc3f1c9",
+    "semantic_hash": ""
+  },
+  "custom_mods/AugmentedDetector/AugmentedDetectorMod.cs": {
+    "mtime": 1794933531.5291207,
+    "seen": 1795107070.4545362,
+    "ast_hash": "830502f00705ca0b1c48b75ea64129c0",
+    "semantic_hash": ""
+  },
+  "custom_mods/LotteryForesight/LotteryForesightMod.cs": {
+    "mtime": 1794985850.1296828,
+    "seen": 1795107070.4545362,
+    "ast_hash": "610b4e1935d7f1521db00934b13e5fa3",
+    "semantic_hash": ""
+  },
+  "custom_mods/PreciseTemperatureControl/PreciseTemperatureControlMod.cs": {
+    "mtime": 1794648256.576845,
+    "seen": 1795107070.4545362,
+    "ast_hash": "874dc3905ebdfe64ca0830670dd4d4d9",
+    "semantic_hash": ""
+  },
+  "custom_mods/SmartInventorySort/SmartInventorySortMod.cs": {
+    "mtime": 1795108552.6150782,
+    "seen": 1795108755.3642235,
+    "ast_hash": "b081be2f47e87ea83d897afe4bd8c764",
+    "semantic_hash": ""
+  },
+  "custom_mods/TestMod.cs": {
+    "mtime": 1794648117.2133794,
+    "seen": 1795107070.4545362,
+    "ast_hash": "820cb621a11b21ee7eb45ad58d30d203",
+    "semantic_hash": ""
+  },
+  "deploy_augmented_detector.ps1": {
+    "mtime": 1794936184.8439384,
+    "seen": 1795107070.4545362,
+    "ast_hash": "109ff1477e5b603dd327a765faa91067",
+    "semantic_hash": ""
+  },
+  "deploy_lottery.ps1": {
+    "mtime": 1794985611.2433293,
+    "seen": 1795107070.4545362,
+    "ast_hash": "8d689bbc3fb83ddf79a9569279301872",
+    "semantic_hash": ""
+  },
+  "deploy_smart_sort.ps1": {
+    "mtime": 1794987361.606331,
+    "seen": 1795107070.4545362,
+    "ast_hash": "16070188ea128b2ba9b3d26e1ed4ac84",
+    "semantic_hash": ""
+  },
+  "extract_extra_perks_catalog.py": {
+    "mtime": 1795075463.594603,
+    "seen": 1795107070.4545362,
+    "ast_hash": "26a4be1547f1e8cac85efad5b7034b1b",
+    "semantic_hash": ""
+  },
+  "extract_strings.py": {
+    "mtime": 1795075463.5956004,
+    "seen": 1795107070.4545362,
+    "ast_hash": "e816bb68ed2a7c5a4c5eb0ce1d9abba7",
+    "semantic_hash": ""
+  },
+  "patch_baishe.ps1": {
+    "mtime": 1794935516.2942803,
+    "seen": 1795107070.4545362,
+    "ast_hash": "930e597f41e82ed2a2f5ba5a9e34680d",
+    "semantic_hash": ""
+  },
+  "search_redeem.ps1": {
+    "mtime": 1794985347.9675083,
+    "seen": 1795107070.4545362,
+    "ast_hash": "97c0ed45001d8008b323e7f6030d7ade",
+    "semantic_hash": ""
+  },
+  "show_ghost_constants.ps1": {
+    "mtime": 1794934772.3906357,
+    "seen": 1795107070.4545362,
+    "ast_hash": "fa38ec51926c77f2fe8ccec3350fea1e",
+    "semantic_hash": ""
+  },
+  "show_ghost_lines.ps1": {
+    "mtime": 1794934839.1621685,
+    "seen": 1795107070.4545362,
+    "ast_hash": "be7748b86736bb4619bf4adcf32c3ecd",
+    "semantic_hash": ""
+  },
+  "show_indices.ps1": {
+    "mtime": 1794934693.7906668,
+    "seen": 1795107070.4545362,
+    "ast_hash": "c6c807c1fb192223147b37ad46a68e0e",
+    "semantic_hash": ""
+  },
+  "update_es3.py": {
+    "mtime": 1794649044.1268308,
+    "seen": 1795107070.4545362,
+    "ast_hash": "c433e185a6ee64b7a4e95c9d964fbe31",
+    "semantic_hash": ""
+  },
+  "update_es3_aug.py": {
+    "mtime": 1794936331.0176685,
+    "seen": 1795107070.4545362,
+    "ast_hash": "4388e23450a58d1c014e4e76f3499066",
+    "semantic_hash": ""
+  },
+  "update_es3_smart_sort.py": {
+    "mtime": 1794987435.490934,
+    "seen": 1795107070.4545362,
+    "ast_hash": "61a354cad9e33da364cc25dddc84600a",
+    "semantic_hash": ""
+  },
+  "verify_lottery_dll.ps1": {
+    "mtime": 1794985619.4941196,
+    "seen": 1795107070.4545362,
+    "ast_hash": "dda93cd771c80621acdf28df73c7d482",
+    "semantic_hash": ""
+  },
+  "verify_mod_order.py": {
+    "mtime": 1794937079.995887,
+    "seen": 1795107070.4545362,
+    "ast_hash": "e8b3e2bae6d63490be7cbf1e64be6f3b",
+    "semantic_hash": ""
+  },
+  "CHECKPOINT.md": {
+    "mtime": 1795108736.8977416,
+    "seen": 1795108755.3642235,
+    "ast_hash": "f552e3f7e3ec6520adb827caed560a5c",
+    "semantic_hash": ""
+  },
+  "PLAN.md": {
+    "mtime": 1795108686.9198842,
+    "seen": 1795108755.3642235,
+    "ast_hash": "e9e655ffc75614d451c62b386d717a70",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1794997688.471652,
+    "seen": 1795107070.4545362,
+    "ast_hash": "4f4d6b839e96366945c5061b809e2577",
+    "semantic_hash": ""
+  },
+  "custom_mods/AugmentedDetector/prompt_gen_mod.txt": {
+    "mtime": 1794932389.3047504,
+    "seen": 1795107070.4545362,
+    "ast_hash": "4d0953b20dcca8db957dc30d0ef881d6",
+    "semantic_hash": ""
+  },
+  "custom_mods/LotteryForesight/prompt_fix_lottery.txt": {
+    "mtime": 1794985507.054107,
+    "seen": 1795107070.4545362,
+    "ast_hash": "28844d0e05002944c2f5d5854dc79cd8",
+    "semantic_hash": ""
+  }
+}
