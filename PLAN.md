@@ -127,3 +127,9 @@
   - [x] 24.3: Tái cấu trúc `GetAvailableInventories()` bảo toàn ID bền vững cho hòm đang mở, tránh reset về cấu hình mặc định.
   - [x] 24.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.3) và triển khai vào game.
   - [x] 24.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.
+- [x] **Chặng 25: Tách Biệt Hạng Cấm (RESTRICTED Classes) Khỏi Tag Hàng Cấm (CONTRABAND) Khi Đã Hợp Pháp Hóa (v1.6.4)**
+  - [x] 25.1: Cập nhật hàm `GetItemTagIds` và `AddMatchingTagIds` trong `SmartInventorySortMod.cs` để không tự động gán `CONTRABAND` cho `RESTRICTED_1/2/3`.
+  - [x] 25.2: Bổ sung tầng bảo vệ Permit & Restricted Verification (Master Isolation Shield) giải phóng tag CONTRABAND cho mọi vật phẩm đã có giấy phép hợp pháp (`!item.IsTag("CONTRABAND_ITEM_TAG")`).
+  - [x] 25.3: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.4) và triển khai vào thư mục game `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`.
+  - [x] 25.4: Kiểm thử và xác thực cơ chế phân loại vũ khí/đồ cấm đã có giấy phép (Sentinel Mk. III đi thẳng vào hòm súng).
+  - [x] 25.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.

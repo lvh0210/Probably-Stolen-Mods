@@ -8,19 +8,18 @@ using UnityEngine.EventSystems;
 using HarmonyLib;
 
 // =========================================================================
-// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.3)
+// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.4)
 // Tác giả: Antigravity AI (VibeCode)
-// Tính năng nâng cấp cốt lõi v1.6.3:
-// 1. KHẮC PHỤC TRIỆT ĐỂ LỖI GÓI HẠT GIỐNG NHẢY NHẦM VÀO HÒM ĐANG MỞ:
-//    - Loại bỏ STORABLE_PACKAGE_TAG khỏi danh mục Hòm Chứa (CONTAINER). Gói hạt giống là vật phẩm gieo trồng, không phải hòm lưu trữ.
-//    - Mở rộng nhận diện tag SEED (SEED, SEED_ITEM_TAG, SEED_TAG, MODIFIED_SEED, FARMING_SUPPLIES, CROP, PLANT).
-//    - Nâng cấp MASTER ISOLATION SHIELD: Bảo vệ tuyệt đối Hạt Giống, Thực phẩm, Y tế, Nước uống không bao giờ bị dính nhầm tag Hóa Chất (CHEMICAL) hoặc Hòm Chứa (CONTAINER).
-// 2. BẢO TOÀN ID BỀN VỮNG CHO HÒM ĐANG MỞ (PERSISTENT ID INTEGRITY):
-//    - Tái cấu trúc GetAvailableInventories(): Quét container trong kho tiệm trước để giữ vững ID gốc (box_..._uniqueId) kèm cấu hình đã lưu của người chơi.
-//    - Nhận diện trạng thái mở (isOpen) trực tiếp qua contentWindow.IsVisible() thay vì sinh ID hash tạm làm reset hòm về mặc định.
-// 3. TỐI ƯU HÓA TOÀN DIỆN GIAO DIỆN & DANH MỤC TAG:
-//    - Lưới chọn nhiều Tag 2 cột cân xứng (418px) + Tag Kho Chung toàn hàng (842px).
-//    - 21 danh mục tag tinh gọn, chuẩn mực, hỗ trợ hòm nâng cấp 2 Tab và quét đệ quy hòm lồng hòm.
+// Tính năng nâng cấp cốt lõi v1.6.4:
+// 1. TÁCH BIỆT HOÀN TOÀN HẠNG CẤM (RESTRICTED_1/2/3) KHỎI HÀNG CẤM (CONTRABAND):
+//    - Không tự động gán tag CONTRABAND cho các hạng cấm RESTRICTED_1/2/3 trong GetItemTagIds và AddMatchingTagIds.
+//    - Tích hợp PermitHelper.HavePermit(item) vào Master Isolation Shield: Tự động loại bỏ tag CONTRABAND nếu người chơi đã sở hữu giấy phép hợp pháp.
+//    - Đảm bảo vũ khí (Sentinel Mk. III...), vật tư y tế, hóa chất khi đã mua giấy phép hợp pháp sẽ đi thẳng vào hòm chuyên biệt tương ứng (Súng, Y Tế, Hóa Chất), không bao giờ bị ném nhầm vào Hòm Hàng Cấm.
+// 2. KẾ THỪA TOÀN BỘ TÍNH NĂNG V1.6.3:
+//    - Bảo toàn ID bền vững cho hòm đang mở, quét container kho tiệm trước tiên.
+//    - Loại bỏ STORABLE_PACKAGE_TAG khỏi CONTAINER, Master Isolation Shield cho SEED/FOOD/MEDICAL/DRINK.
+//    - Nhận diện toàn bộ Tab hòm nâng cấp (MachineryTabs), quét đệ quy hòm lồng hòm (FindAllChildItems).
+//    - Giao diện 2 cột cân xứng 418px + Kho Chung toàn màn hình, 21 tag phân loại trực quan.
 // =========================================================================
 
 public class SmartInventorySortMod : IMod
@@ -40,7 +39,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.3 (Khắc phục lỗi Gói Hạt Giống nhảy nhầm vào Hòm Đang Mở + Bảo toàn ID hòm).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.4 (Hỗ trợ hệ thống Giấy phép cuối game, phân định RESTRICTED vs CONTRABAND).");
             }
 
             if (uiObject == null)
@@ -48,7 +47,7 @@ public class SmartInventorySortMod : IMod
                 uiObject = new GameObject("SmartCategorySortUI");
                 uiObject.AddComponent<SmartCategorySortController>();
                 UnityEngine.Object.DontDestroyOnLoad(uiObject);
-                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.3.");
+                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.4.");
             }
         }
         catch (Exception ex)
@@ -377,7 +376,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.skin.window.fontSize = 14;
 
         // VẼ 1 CỬA SỔ DUY NHẤT (Chống đè cửa sổ, chống kéo ra kéo vào)
-        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.3)");
+        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.4)");
     }
 
     private void DrawMainWindow(int windowId)
@@ -1061,8 +1060,8 @@ public class SmartCategorySortController : MonoBehaviour
         // Rượu bia & Thuốc lá
         if (item.IsTag("ALCOHOL") || item.IsTag("WINE_CONTAINER_TAG") || item.IsTag("RED_IMP_BEER_TAG") || item.IsTag("WINEMAKER") || item.IsTag("CIGARETTE_TAG") || item.IsTag("ZHONGHUA")) tags.Add("ALCOHOL");
 
-        // Hàng cấm & Độc dược
-        if (item.IsTag("CONTRABAND") || item.IsTag("CONTRABAND_ITEM_TAG") || item.IsTag("RESTRICTED_1") || item.IsTag("RESTRICTED_2") || item.IsTag("RESTRICTED_3") || item.IsTag("TRAFFICKING") || item.IsTag("POISON")) tags.Add("CONTRABAND");
+        // Hàng cấm & Độc dược (Chỉ gắn khi thực sự là hàng cấm theo quy định game, không gán theo RESTRICTED_1/2/3 để không làm sai lệch vật phẩm đã có giấy phép)
+        if (item.IsTag("CONTRABAND") || item.IsTag("CONTRABAND_ITEM_TAG") || item.IsTag("TRAFFICKING") || item.IsTag("POISON")) tags.Add("CONTRABAND");
 
         // Chất gây nghiện (Ma túy)
         if (item.IsTag("NARCOTIC")) tags.Add("ADDICTIVE");
@@ -1122,6 +1121,12 @@ public class SmartCategorySortController : MonoBehaviour
             tags.Remove("CONTAINER");
         }
 
+        // 6. PERMIT & RESTRICTED VERIFICATION: Nếu vật phẩm thuộc hạng cấm (RESTRICTED_1/2/3) nhưng đã được cấp phép hợp pháp (không còn tag CONTRABAND_ITEM_TAG hoặc CONTRABAND), loại bỏ hoàn toàn tag CONTRABAND
+        if ((item.IsTag("RESTRICTED_1") || item.IsTag("RESTRICTED_2") || item.IsTag("RESTRICTED_3")) && !item.IsTag("CONTRABAND_ITEM_TAG") && !item.IsTag("CONTRABAND"))
+        {
+            tags.Remove("CONTRABAND");
+        }
+
         if (tags.Count == 0) tags.Add("GENERAL");
         return tags;
     }
@@ -1136,7 +1141,7 @@ public class SmartCategorySortController : MonoBehaviour
         if (t == "WATER" || t == "WATER_RATION" || t == "BREVAGE" || t == "FILTER" || t == "WATER_FILTER" || t == "WATER_PURIFICATION_SUPPLY" || t == "WATER_PURIFICATION_TABLET" || t == "WATER_TESTING_STRIP_TAG" || t == "WATER_BOTTLE_ITEM_TAG") { tags.Add("DRINK"); return; }
         if (t == "CHEMICAL" || t == "CHEMICAL_PRODUCT_TAG" || t == "CHEMICAL_PRODUCT_PURITY_TAG" || t == "CHEMICAL_SUPPLIES" || t == "LIQUID_ACID" || t == "LIQUID_CHLORINE" || t == "CATEGORY_CHEMICAL_PURITY" || t == "REAGENT" || t == "CHEMIST" || t == "MODULE_TYPE_CHEM" || t == "CHEMICAL_INTENT_TAG") { tags.Add("CHEMICAL"); return; }
         if (t == "ALCOHOL" || t == "CIGARETTE_TAG" || t == "TOBACCO") { tags.Add("ALCOHOL"); return; }
-        if (t == "CONTRABAND" || t == "RESTRICTED_1" || t == "RESTRICTED_2" || t == "RESTRICTED_3" || t == "POISON" || t == "TRAFFICKING") { tags.Add("CONTRABAND"); return; }
+        if (t == "CONTRABAND" || t == "CONTRABAND_ITEM_TAG" || t == "POISON" || t == "TRAFFICKING") { tags.Add("CONTRABAND"); return; }
         if (t == "NARCOTIC" || t == "ADDICTIVE") { tags.Add("ADDICTIVE"); return; }
         if (t == "MEDICAL" || t == "MEDICAL_TOOL" || t == "ITEM_MEDICAL_TAG" || t == "MEDICAL_ITEM_TAG" || t == "MEDICAL_SUPPLY_TAG" || t == "SUPPLIES_MEDICAL" || t == "AUTONOMOUS_MEDICAL_SYSTEM_TAG" || t == "AMENITIES_MEDICAL_TAG") { tags.Add("MEDICAL"); return; }
         if (t == "FIREARM" || t == "MODDABLE" || t == "GUN_MOD" || t == "ATTACHMENT" || (t == "WEAPON" && !tags.Contains("MELEE"))) { tags.Add("GUN"); return; }

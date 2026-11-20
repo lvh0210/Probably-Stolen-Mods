@@ -3,9 +3,11 @@
   <ID>SmartInventorySort</ID>
   <Name>Sắp Xếp &amp; Phân Loại Kho Thông Minh (Smart Category &amp; Inventory Sort)</Name>
   <Author>Antigravity</Author>
-  <ModVersion>1.6.3</ModVersion>
+  <ModVersion>1.6.4</ModVersion>
   <Description>Bộ công cụ tối ưu hóa kho hàng đa năng:
 1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu cấu hình hòm, F3: Gom &amp; Phân loại nhanh):
+- Hỗ trợ chuẩn hệ thống Giấy phép (Permits) cuối game: Tách biệt hoàn toàn hạng cấm (RESTRICTED_1/2/3) khỏi tag Hàng Cấm (CONTRABAND).
+- Tích hợp PermitHelper.HavePermit() vào Master Isolation Shield: Tự động xóa tag CONTRABAND cho mọi vật phẩm đã có giấy phép hợp pháp (như súng Sentinel Mk. III, đạn, hóa chất, y tế), giúp đồ đi thẳng vào hòm chuyên biệt tương ứng và không bao giờ bị ném nhầm vào Hòm Hàng Cấm.
 - Khắc phục triệt để lỗi gói hạt giống nhảy nhầm vào hòm đang mở: Loại bỏ STORABLE_PACKAGE_TAG khỏi danh mục CONTAINER, mở rộng nhận diện SEED và bổ sung bảo vệ chéo Master Isolation Shield cho SEED/FOOD/MEDICAL/DRINK.
 - Bảo toàn ID bền vững cho hòm đang mở: Quét container kho tiệm trước tiên để giữ nguyên ID gốc (box_..._uniqueId) cùng cấu hình người chơi đã cài đặt, tránh tình trạng khi mở hòm bị sinh ID tạm box_hash_... làm mất cấu hình.
 - Khắc phục triệt để lỗi hòm Hóa chất (CHEMICAL) gom nhầm Thực phẩm và Y tế qua Master Isolation Shield.
