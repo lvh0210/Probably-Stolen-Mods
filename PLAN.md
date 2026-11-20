@@ -103,3 +103,9 @@
   - [x] 20.3: Áp dụng vào `GetAvailableInventories` và `ExecuteCategorySort`
   - [x] 20.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.5.3) và triển khai vào game
   - [x] 20.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub
+- [x] **Chặng 21: Nhận Diện Tab Hòm Nâng Cấp, Quét Đồ Hòm Lồng Hòm & Chuẩn Hóa 100% Tag Gốc Game (v1.6.0)**
+  - [x] 21.1: Tận dụng trực tiếp `item.FindContentTabs()` và `MachineryTabs` của game để nhận diện đầy đủ mọi Tab (Tab 1, Tab 2...) khi hòm được nâng cấp
+  - [x] 21.2: Sử dụng `GameItem.FindAllChildItems()` của game để gom sạch các vật phẩm nằm trong các hòm lồng nhau bên trong kho hòm mở rộng
+  - [x] 21.3: Chuẩn hóa 100% theo Tag gốc của game (`IsTag`, `itemTypes`, `GetGameItemType()`), loại bỏ toàn bộ các quy tắc cô lập thủ công, phân định tuyệt đối Lọc Nước vs Thực Phẩm
+  - [x] 21.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.0) và triển khai vào thư mục game
+  - [x] 21.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub

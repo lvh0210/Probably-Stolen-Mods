@@ -3,22 +3,32 @@
 - **Dự án**: Bộ Mod & Việt Hóa game Probably Stolen (Bản IMod Native)
 - **Thư mục lưu trữ**: `D:\VibeCode\Probably Stolen`
 - **Kho lưu trữ GitHub**: [https://github.com/lvh0210/Probably-Stolen-Mods](https://github.com/lvh0210/Probably-Stolen-Mods)
-- **Trạng thái**: Hoàn tất 100% việc loại bỏ các gói/hộp chứa chuyên biệt 1 vật phẩm (túi hạt giống, hộp viên lọc nước, hộp đạn, két bia...) khỏi danh sách kho Menu F2, chỉ giữ lại các hòm chứa thực thụ (`SmartInventorySort` v1.5.3).
+- **Trạng thái**: Hoàn tất 100% việc hỗ trợ hòm nâng cấp nhiều Tab (`MachineryTabs`), quét đồ trong hòm lồng nhau (`FindAllChildItems`), và chuẩn hóa 100% theo hệ thống Tag gốc của game (`SmartInventorySort` v1.6.0).
 
-## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.5.3):
-1. **Bộ Lọc Hòm Chứa Thực Thụ (`IsGeneralStorageContainer`)**:
-   - *Nguyên nhân trước đây*: Một số vật phẩm dạng gói hoặc hộp đựng đơn mục đích trong game (như `nutrifruit_seed_packet`, `water_purification_tablet_container`, `ammo_box`, `water_test_kit`, `beer_case`) sở hữu một lưới ô chứa bên trong (`GameGridInventory`), nhưng engine game giới hạn ngặt nghèo hàm `mayInventoryAddItemFunc` chỉ cho phép nhét đúng 1 loại vật phẩm duy nhất tương ứng (chỉ đựng hạt giống, chỉ đựng viên lọc nước, chỉ đựng đạn...). Do đó, chúng bị liệt kê nhầm vào danh sách hòm cấu hình F2 khiến người dùng khó quản lý.
-   - *Giải pháp v1.5.3*:
-     - Nhận diện và loại trừ triệt để các tag gói chuyên biệt: `PRE_CONTAINER_TAG`, `STORABLE_PACKAGE_TAG`, `AMMO_BOX_TAG`, `WINE_CONTAINER_TAG`, `CASSETTE_PLAYER`, `CAGE_TAG`.
-     - Loại trừ theo định danh vật phẩm: `seed_packet`, `seed_pack`, `gói hạt giống`, `túi hạt giống`, `water_tablet`, `tablet_container`, `nutrient_tablet`, `test_kit`, `viên lọc`, `que thử`, `ammo_box`, `ammo_case`, `beer_case`, `cigarette_pack`, `cigar_case`, `cassette_player`.
-     - Xác thực các thùng chứa đa năng thực thụ qua tag: `CONTAINER_TAG`, `BACKPACK_TAG`, `POUCH_TAG`, `STORAGE`, `SAFE_TAG`, `SUPPLY_CRATE`, `TOOLBOX_TAG`, `SMUGGLER_BAY` hoặc từ khóa ba lô, két sắt, rương, hòm đồ, hốc giấu, kho nền tiệm.
-2. **Tích Hợp Nhất Quán Tại 2 Điểm Then Chốt**:
-   - *Menu Quản Lý Kho F2 (`GetAvailableInventories`)*: Toàn bộ gói hạt giống, hộp viên lọc, hộp que thử, hộp đạn... bị ẩn hoàn toàn khỏi danh sách hòm, trả lại giao diện gọn gàng chỉ gồm ba lô, rương, két, hòm tiếp tế và kho nền tiệm.
-   - *Luồng Phân Loại F3 (`ExecuteCategorySort`)*: Các gói hạt giống và hộp viên lọc nước được đối xử chuẩn xác như vật phẩm hàng hóa thông thường (tự động gom về hòm Hạt Giống hoặc Nước/Lọc Nước), trong khi các hòm chứa thực thụ luôn được bảo vệ không bị chuyển nhầm thành vật phẩm lẻ.
-3. **Đồng Bộ Phiên Bản & Đóng Gói**:
-   - Cập nhật phiên bản lên `1.5.3` trong `SmartInventorySortMod.cs` và `manifest.xml`.
-   - Biên dịch thành công `SmartInventorySort.dll` (v1.5.3) và triển khai vào `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`.
+## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.6.0):
+1. **Hỗ Trợ Toàn Diện Hòm Nâng Cấp Nhiều Tab (`MachineryTabs`)**:
+   - *Nguyên nhân trước đây*: Khi hòm chứa đồ được nâng cấp từ 1 tab lên 2 tab (hoặc nhiều tab), cửa sổ `PixelWindow` chuyển sang sử dụng cấu trúc container phân trang `MachineryTabs`. Hàm đọc kho cũ chỉ lấy phần tử đơn lẻ đầu tiên nên không phát hiện ra các tab mới, khiến hòm biến mất khỏi menu F2 và F3 không thể thao tác.
+   - *Giải pháp v1.6.0*:
+     - Tận dụng trực tiếp API gốc của game: Gọi `GameItem.FindContentTabs()` và `MachineryTabs.CollectStorage()`.
+     - Phân giải đầy đủ từng tab inventory (`GameGridInventory`) con của hòm đồ.
+     - Hiển thị độc lập từng Tab trên Menu F2 với định danh rõ ràng: `[Tên hòm - Tab 1/2]`, `[Tên hòm - Tab 2/2]`, giúp người dùng cấu hình mức ưu tiên và tag nhận đồ riêng cho từng tab mượt mà.
 
-*Cập nhật tự động: v1.5.3 | 2026-11-20 00:18*
+2. **Gom Đồ Trong Hòm Lồng Nhau (Nested Containers Extraction)**:
+   - *Nguyên nhân trước đây*: Khi người chơi cất các hòm/ba lô nhỏ vào trong một kho hòm mở rộng lớn, luồng phân loại F3 trước đây chỉ duyệt các món đồ cấp 1, bỏ qua hoàn toàn các món đồ nằm sâu bên trong hòm con.
+   - *Giải pháp v1.6.0*:
+     - Tận dụng phương thức duyệt đệ quy có sẵn của game: `GameItem.FindAllChildItems()`.
+     - Khi bấm F3, hệ thống tự động quét và lôi toàn bộ các vật phẩm hàng hóa hợp lệ nằm sâu trong các tầng hòm con ra để phân phối vào các hòm đích theo thứ tự ưu tiên.
+     - Giữ nguyên vị trí của bản thân chiếc hòm con (`IsGeneralStorageContainer`), chỉ rút các vật phẩm hàng hóa bên trong bằng `(item.parentInventory as GameGridInventory).Expel(item)`.
 
-*Cập nhật mốc tự động: Step 3600 | 2026-11-20 11:41:22*
+3. **Chuẩn Hóa 100% Theo Hệ Thống Tag Gốc Của Game (Không Dùng Cô Lập Thủ Công)**:
+   - *Nguyên nhân trước đây*: Các chuỗi nhận diện mở rộng và cơ chế lọc ép kiểu trước đây vô tình làm dính từ khóa liên quan đến nước/viên lọc vào nhóm thực phẩm.
+   - *Giải pháp v1.6.0*:
+     - Loại bỏ hoàn toàn các khối quy tắc cô lập thủ công (Safety Shield) và các chuỗi đoán mò.
+     - Dựa 100% vào nguồn dữ liệu chuẩn mực từ engine: `item.IsTag(...)`, `item.itemTypes`, `item.GetGameItemType()`.
+     - Nhóm đồ Lọc Nước (`WATER_PURIFICATION_SUPPLY`, `WATER_PURIFICATION_TABLET`, `FILTER`, `WATER_FILTER`) được phân định độc lập tuyệt đối với nhóm Thực Phẩm (`FOOD`, `PROCESSED_FOOD`), triệt tiêu 100% hiện tượng lọc nước bị rơi vào hòm thực phẩm.
+
+4. **Đồng Bộ Phiên Bản & Đóng Gói**:
+   - Cập nhật phiên bản lên `1.6.0` trong `SmartInventorySortMod.cs` và `manifest.xml`.
+   - Biên dịch thành công `SmartInventorySort.dll` (v1.6.0) không lỗi và triển khai vào `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`.
+
+*Cập nhật tự động: v1.6.0 | 2026-11-20 14:20*
