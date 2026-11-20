@@ -115,3 +115,9 @@
   - [x] 22.3: Tối ưu hóa UI: bố cục 2 cột cân đối cho bảng chọn tag, responsive scroll, khoảng cách card rộng rãi, badge tag màu sắc trực quan, làm gọn các nút điều khiển.
   - [x] 22.4: Biên dịch `SmartInventorySort.dll` (v1.6.1) và triển khai vào thư mục game.
   - [x] 22.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.
+- [x] **Chặng 23: Khắc Phục Triệt Để Lỗi Hòm Hóa Chất Nhận Nhầm Y Tế & Thực Phẩm (v1.6.2)**
+  - [x] 23.1: Loại bỏ các game tag dùng chung quá rộng khỏi CHEMICAL và thanh lọc nguồn gốc tag.
+  - [x] 23.2: Bổ sung đầy đủ các tag chuẩn game cho Thực phẩm và Y tế.
+  - [x] 23.3: Thiết lập Master Isolation Shield ngăn ngừa tuyệt đối cross-tag CHEMICAL với FOOD/MEDICAL/DRINK.
+  - [x] 23.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.2) và triển khai vào game.
+  - [x] 23.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.

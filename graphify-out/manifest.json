@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "custom_mods/SmartInventorySort/SmartInventorySortMod.cs": {
-    "mtime": 1795163445.1075275,
-    "seen": 1795163591.1523318,
-    "ast_hash": "0bbd22121645b1e00b11891b5932469d",
+    "mtime": 1795178538.9066176,
+    "seen": 1795178723.2911906,
+    "ast_hash": "702b4da011056b056ec0eaf7944e0485",
     "semantic_hash": ""
   },
   "custom_mods/TestMod.cs": {
@@ -156,15 +156,15 @@
     "semantic_hash": ""
   },
   "CHECKPOINT.md": {
-    "mtime": 1795163543.7997525,
-    "seen": 1795163591.1523318,
-    "ast_hash": "24082734885a4c86a968c1987b06df02",
+    "mtime": 1795178695.963459,
+    "seen": 1795178723.2911906,
+    "ast_hash": "48c0774efd06bc3d0bf0577fcfc83aad",
     "semantic_hash": ""
   },
   "PLAN.md": {
-    "mtime": 1795163500.4724538,
-    "seen": 1795163591.1523318,
-    "ast_hash": "7d0a8ebec26ef0839770bdd768666ebb",
+    "mtime": 1795178702.702614,
+    "seen": 1795178723.2911906,
+    "ast_hash": "ad94362944061b6e1624d119041db8d7",
     "semantic_hash": ""
   },
   "README.md": {
@@ -183,6 +183,12 @@
     "mtime": 1794985507.054107,
     "seen": 1795107070.4545362,
     "ast_hash": "28844d0e05002944c2f5d5854dc79cd8",
+    "semantic_hash": ""
+  },
+  "scratch_inspect.ps1": {
+    "mtime": 1795177221.167487,
+    "seen": 1795178723.2911906,
+    "ast_hash": "504f9bb883001a8483ba6598d95cd7d0",
     "semantic_hash": ""
   }
 }

@@ -8,14 +8,18 @@ using UnityEngine.EventSystems;
 using HarmonyLib;
 
 // =========================================================================
-// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.1)
+// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.2)
 // Tác giả: Antigravity AI (VibeCode)
-// Tính năng nâng cấp cốt lõi v1.6.1:
-// 1. TỐI ƯU HÓA TOÀN DIỆN GIAO DIỆN (UI REFACTOR):
+// Tính năng nâng cấp cốt lõi v1.6.2:
+// 1. KHẮC PHỤC TRIỆT ĐỂ LỖI HÒM HÓA CHẤT GOM NHẦM THỰC PHẨM & Y TẾ:
+//    - Thanh lọc triệt để các game tag quá rộng khỏi danh mục Hóa Chất (CHEMICAL).
+//    - Loại bỏ LIQUID_CONTAINER_TAG, LIQUID_CONTAINER_DROPPER_TAG, LIQUID_LUCK_TAG, CHEM_ITEM_TAG.
+//    - Bổ sung toàn diện các game tag chuẩn cho Thực phẩm (FOOD_ITEM_TAG, SNACK_TAG, FISH_ITEM_TAG...) và Y tế (MEDICAL_ITEM_TAG, MEDICAL_SUPPLY_TAG...).
+//    - Thiết lập MASTER ISOLATION SHIELD: Bảo vệ tuyệt đối Thực phẩm, Y tế, Nước uống, Hạt giống không bao giờ dính nhầm tag Hóa Chất.
+// 2. TỐI ƯU HÓA TOÀN DIỆN GIAO DIỆN (UI REFACTOR):
 //    - Lưới chọn nhiều Tag 2 cột cân xứng (418px) + Tag Kho Chung toàn hàng (842px).
 //    - Nút bấm to rõ cao 32px, màu sắc trực quan (xanh ngọc khi chọn, xám tối khi chưa chọn).
 //    - Badge hiển thị tag và mức ưu tiên trong thẻ hòm đồ gọn gàng, thoáng đãng, chống tràn mép.
-// 2. BỔ SUNG TAG HÓA CHẤT (CHEMICAL): Bao quát toàn bộ hóa chất, axit, clo, độ tinh khiết hóa học.
 // 3. TINH GỌN & HỢP NHẤT TAG THÔNG MINH (21 TAG TỔNG CỘNG):
 //    - Gộp Súng + Phụ kiện -> Súng & Phụ Kiện Súng (GUN).
 //    - Gộp Đạn + Thuốc nổ -> Đạn Dược & Thuốc Nổ (AMMO).
@@ -46,7 +50,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.1 (Tối ưu UI + Bổ sung Tag Hóa Chất + Tinh gọn Tag).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.2 (Khắc phục triệt để phân loại tag Hóa chất vs Thực phẩm/Y tế).");
             }
 
             if (uiObject == null)
@@ -54,7 +58,7 @@ public class SmartInventorySortMod : IMod
                 uiObject = new GameObject("SmartCategorySortUI");
                 uiObject.AddComponent<SmartCategorySortController>();
                 UnityEngine.Object.DontDestroyOnLoad(uiObject);
-                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.1.");
+                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.2.");
             }
         }
         catch (Exception ex)
@@ -383,7 +387,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.skin.window.fontSize = 14;
 
         // VẼ 1 CỬA SỔ DUY NHẤT (Chống đè cửa sổ, chống kéo ra kéo vào)
-        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.1)");
+        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.2)");
     }
 
     private void DrawMainWindow(int windowId)
@@ -1053,16 +1057,16 @@ public class SmartCategorySortController : MonoBehaviour
         if (item.IsTag("ARMOR") || item.IsTag("TACTICAL_EQUIPMENT_TAG") || item.IsTag("ARMORED")) tags.Add("ARMOR");
 
         // Y tế
-        if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("MEDICAL_TOOL") || item.IsTag("AUTONOMOUS_MEDICAL_SYSTEM_TAG")) tags.Add("MEDICAL");
+        if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("MEDICAL_ITEM_TAG") || item.IsTag("MEDICAL_SUPPLY_TAG") || item.IsTag("SUPPLIES_MEDICAL") || item.IsTag("MEDICAL_TOOL") || item.IsTag("AUTONOMOUS_MEDICAL_SYSTEM_TAG") || item.IsTag("AMENITIES_MEDICAL_TAG")) tags.Add("MEDICAL");
 
-        // Hóa chất & Điều chế (MỚI THEO YÊU CẦU)
-        if (item.IsTag("CHEMICAL_PRODUCT_TAG") || item.IsTag("CHEMICAL_PRODUCT_PURITY_TAG") || item.IsTag("CHEMICAL_SUPPLIES") || item.IsTag("CHEM_ITEM_TAG") || item.IsTag("LIQUID_ACID") || item.IsTag("LIQUID_CHEMICAL_CONTAMINANT") || item.IsTag("LIQUID_CHLORINE") || item.IsTag("CATEGORY_CHEMICAL_PURITY") || item.IsTag("CHEMICAL_INTENT_TAG") || item.IsTag("CHEMICAL") || item.IsTag("CHEMIST") || item.IsTag("REAGENT") || item.IsTag("LIQUID_CONTAINER_DROPPER_TAG") || item.IsTag("LIQUID_CONTAINER_TAG") || item.IsTag("LIQUID_LUCK_TAG")) tags.Add("CHEMICAL");
+        // Hóa chất & Điều chế (Đã thanh lọc, loại bỏ hoàn toàn các tag dùng chung với Nước, Thực phẩm, Thuốc nhỏ mắt)
+        if (item.IsTag("CHEMICAL_PRODUCT_TAG") || item.IsTag("CHEMICAL_PRODUCT_PURITY_TAG") || item.IsTag("CHEMICAL_SUPPLIES") || item.IsTag("LIQUID_ACID") || item.IsTag("LIQUID_CHLORINE") || item.IsTag("CATEGORY_CHEMICAL_PURITY") || item.IsTag("CHEMICAL_INTENT_TAG") || item.IsTag("CHEMICAL") || item.IsTag("CHEMIST") || item.IsTag("REAGENT") || item.IsTag("MODULE_TYPE_CHEM")) tags.Add("CHEMICAL");
 
         // Thực phẩm
-        if (item.IsTag("FOOD") || item.IsTag("PROCESSED_FOOD") || item.IsTag("TREAT") || item.IsTag("MEAT_FOOD_TAG") || item.IsTag("FRESH_FOOD_TAG") || item.IsTag("CANNED_FOOD_TAG") || item.IsTag("XENO_MEAT_TAG")) tags.Add("FOOD");
+        if (item.IsTag("FOOD") || item.IsTag("FOOD_ITEM_TAG") || item.IsTag("PROCESSED_FOOD") || item.IsTag("TREAT") || item.IsTag("MEAT_FOOD_TAG") || item.IsTag("FRESH_FOOD_TAG") || item.IsTag("CANNED_FOOD_TAG") || item.IsTag("XENO_MEAT_TAG") || item.IsTag("SNACK_TAG") || item.IsTag("FISH_ITEM_TAG") || item.IsTag("EDIBLE_CALORIES") || item.IsTag("FISH_FOOD")) tags.Add("FOOD");
 
         // Nước uống & Lọc nước
-        if (item.IsTag("WATER") || item.IsTag("WATER_RATION") || item.IsTag("BREVAGE") || item.IsTag("WATER_TANK_TAG") || item.IsTag("WATER_PURIFICATION_SUPPLY") || item.IsTag("WATER_PURIFICATION_TABLET") || item.IsTag("FILTER") || item.IsTag("WATER_FILTER") || item.IsTag("WATER_TESTING_STRIP_TAG")) tags.Add("DRINK");
+        if (item.IsTag("WATER") || item.IsTag("WATER_RATION") || item.IsTag("BREVAGE") || item.IsTag("WATER_TANK_TAG") || item.IsTag("WATER_PURIFICATION_SUPPLY") || item.IsTag("WATER_PURIFICATION_TABLET") || item.IsTag("FILTER") || item.IsTag("WATER_FILTER") || item.IsTag("WATER_TESTING_STRIP_TAG") || item.IsTag("WATER_BOTTLE_ITEM_TAG")) tags.Add("DRINK");
 
         // Rượu bia & Thuốc lá
         if (item.IsTag("ALCOHOL") || item.IsTag("WINE_CONTAINER_TAG") || item.IsTag("RED_IMP_BEER_TAG") || item.IsTag("WINEMAKER") || item.IsTag("CIGARETTE_TAG") || item.IsTag("ZHONGHUA")) tags.Add("ALCOHOL");
@@ -1104,11 +1108,11 @@ public class SmartCategorySortController : MonoBehaviour
         if (tags.Count == 0)
         {
             string id = (item.identifier ?? "").ToLowerInvariant();
-            if (id.Contains("chem") || id.Contains("acid") || id.Contains("chlor") || id.Contains("purity") || id.Contains("reagent") || id.Contains("solvent")) tags.Add("CHEMICAL");
-            else if (id.Contains("pill") || id.Contains("bandage") || id.Contains("firstaid") || id.Contains("injector") || id.Contains("stim")) tags.Add("MEDICAL");
-            else if (id.Contains("water") || id.Contains("drink") || id.Contains("juice") || id.Contains("water_filter") || id.Contains("purif") || id.Contains("water_tablet") || id.Contains("filter")) tags.Add("DRINK");
-            else if (id.Contains("food") || id.Contains("bread") || id.Contains("meat") || id.Contains("cheese") || id.Contains("snack") || id.Contains("nutrifruit")) tags.Add("FOOD");
+            if (id.Contains("pill") || id.Contains("bandage") || id.Contains("firstaid") || id.Contains("injector") || id.Contains("stim") || id.Contains("medical") || id.Contains("medicine") || id.StartsWith("med_")) tags.Add("MEDICAL");
+            else if (id.Contains("food") || id.Contains("bread") || id.Contains("meat") || id.Contains("cheese") || id.Contains("snack") || id.Contains("nutrifruit") || id.Contains("potato") || id.Contains("crop") || id.Contains("mushroom") || id.Contains("canned") || id.Contains("ration")) tags.Add("FOOD");
+            else if (id.Contains("water") || id.Contains("drink") || id.Contains("juice") || id.Contains("water_filter") || id.Contains("purif") || id.Contains("water_tablet") || id.Contains("filter") || id.Contains("soda") || id.Contains("cola")) tags.Add("DRINK");
             else if (id.Contains("wine") || id.Contains("beer") || id.Contains("vodka") || id.Contains("alcohol") || id.Contains("cigar") || id.Contains("smoke") || id.Contains("tobacco") || id.Contains("cigarette")) tags.Add("ALCOHOL");
+            else if (id.Contains("chem") || id.Contains("acid_bottle") || id.Contains("reagent") || id.Contains("chlorine") || id.Contains("solvent") || id.Contains("purity_tube") || id.Contains("chemical")) tags.Add("CHEMICAL");
             else if (id.Contains("contraband") || id.Contains("fentanyl") || id.Contains("zyanide")) tags.Add("CONTRABAND");
             else if (id.Contains("narcotic") || id.Contains("morphine")) tags.Add("ADDICTIVE");
             else if (id.Contains("ammo") || id.Contains("bullet") || id.EndsWith("_mag") || id.Contains("explosive") || id.Contains("grenade") || id.Contains("c4") || id.Contains("mine")) tags.Add("AMMO");
@@ -1116,6 +1120,13 @@ public class SmartCategorySortController : MonoBehaviour
             else if (id.Contains("knife") || id.Contains("sword") || id.Contains("crowbar")) tags.Add("MELEE");
             else if (id.Contains("module") || id.Contains("battery") || id.Contains("energy_cell")) tags.Add("MODULE");
             else if (id.Contains("paper") || id.Contains("card") || id.Contains("document") || id.Contains("lottery") || id.Contains("ticket")) tags.Add("DOCUMENT");
+            else if (id.Contains("seed")) tags.Add("SEED");
+        }
+
+        // 5. MASTER ISOLATION SHIELD: Bảo vệ tuyệt đối Thực phẩm, Y tế, Nước uống, Hạt giống không bao giờ bị dính nhầm tag Hóa Chất
+        if (tags.Contains("FOOD") || tags.Contains("MEDICAL") || tags.Contains("DRINK") || tags.Contains("ALCOHOL") || tags.Contains("SEED"))
+        {
+            tags.Remove("CHEMICAL");
         }
 
         if (tags.Count == 0) tags.Add("GENERAL");
@@ -1128,13 +1139,13 @@ public class SmartCategorySortController : MonoBehaviour
         string t = rawTag.Trim().ToUpperInvariant();
 
         // Khớp chuẩn xác 100% với danh mục hệ thống game
-        if (t == "FOOD" || t == "FRESH_FOOD" || t == "PROCESSED_FOOD" || t == "TREAT") { tags.Add("FOOD"); return; }
-        if (t == "WATER" || t == "WATER_RATION" || t == "BREVAGE" || t == "FILTER" || t == "WATER_FILTER" || t == "WATER_PURIFICATION_SUPPLY" || t == "WATER_PURIFICATION_TABLET" || t == "WATER_TESTING_STRIP_TAG") { tags.Add("DRINK"); return; }
-        if (t == "CHEMICAL" || t == "CHEM_ITEM_TAG" || t == "CHEMICAL_PRODUCT_TAG" || t == "CHEMICAL_PRODUCT_PURITY_TAG" || t == "CHEMICAL_SUPPLIES" || t == "LIQUID_ACID" || t == "LIQUID_CHLORINE" || t == "CATEGORY_CHEMICAL_PURITY" || t == "REAGENT" || t == "CHEMIST") { tags.Add("CHEMICAL"); return; }
+        if (t == "FOOD" || t == "FRESH_FOOD" || t == "PROCESSED_FOOD" || t == "TREAT" || t == "FOOD_ITEM_TAG" || t == "FRESH_FOOD_TAG" || t == "CANNED_FOOD_TAG" || t == "MEAT_FOOD_TAG" || t == "FISH_FOOD") { tags.Add("FOOD"); return; }
+        if (t == "WATER" || t == "WATER_RATION" || t == "BREVAGE" || t == "FILTER" || t == "WATER_FILTER" || t == "WATER_PURIFICATION_SUPPLY" || t == "WATER_PURIFICATION_TABLET" || t == "WATER_TESTING_STRIP_TAG" || t == "WATER_BOTTLE_ITEM_TAG") { tags.Add("DRINK"); return; }
+        if (t == "CHEMICAL" || t == "CHEMICAL_PRODUCT_TAG" || t == "CHEMICAL_PRODUCT_PURITY_TAG" || t == "CHEMICAL_SUPPLIES" || t == "LIQUID_ACID" || t == "LIQUID_CHLORINE" || t == "CATEGORY_CHEMICAL_PURITY" || t == "REAGENT" || t == "CHEMIST" || t == "MODULE_TYPE_CHEM" || t == "CHEMICAL_INTENT_TAG") { tags.Add("CHEMICAL"); return; }
         if (t == "ALCOHOL" || t == "CIGARETTE_TAG" || t == "TOBACCO") { tags.Add("ALCOHOL"); return; }
         if (t == "CONTRABAND" || t == "RESTRICTED_1" || t == "RESTRICTED_2" || t == "RESTRICTED_3" || t == "POISON" || t == "TRAFFICKING") { tags.Add("CONTRABAND"); return; }
         if (t == "NARCOTIC" || t == "ADDICTIVE") { tags.Add("ADDICTIVE"); return; }
-        if (t == "MEDICAL" || t == "MEDICAL_TOOL" || t == "ITEM_MEDICAL_TAG") { tags.Add("MEDICAL"); return; }
+        if (t == "MEDICAL" || t == "MEDICAL_TOOL" || t == "ITEM_MEDICAL_TAG" || t == "MEDICAL_ITEM_TAG" || t == "MEDICAL_SUPPLY_TAG" || t == "SUPPLIES_MEDICAL" || t == "AUTONOMOUS_MEDICAL_SYSTEM_TAG" || t == "AMENITIES_MEDICAL_TAG") { tags.Add("MEDICAL"); return; }
         if (t == "FIREARM" || t == "MODDABLE" || t == "GUN_MOD" || t == "ATTACHMENT" || (t == "WEAPON" && !tags.Contains("MELEE"))) { tags.Add("GUN"); return; }
         if (t == "MELEE_WEAPON" || t == "MELEE") { tags.Add("MELEE"); return; }
         if (t == "AMMUNITION" || t == "MUNITION" || t == "AMMO" || t == "EXPLOSIVE") { tags.Add("AMMO"); return; }
