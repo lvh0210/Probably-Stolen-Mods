@@ -8,29 +8,19 @@ using UnityEngine.EventSystems;
 using HarmonyLib;
 
 // =========================================================================
-// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.2)
+// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.3)
 // Tác giả: Antigravity AI (VibeCode)
-// Tính năng nâng cấp cốt lõi v1.6.2:
-// 1. KHẮC PHỤC TRIỆT ĐỂ LỖI HÒM HÓA CHẤT GOM NHẦM THỰC PHẨM & Y TẾ:
-//    - Thanh lọc triệt để các game tag quá rộng khỏi danh mục Hóa Chất (CHEMICAL).
-//    - Loại bỏ LIQUID_CONTAINER_TAG, LIQUID_CONTAINER_DROPPER_TAG, LIQUID_LUCK_TAG, CHEM_ITEM_TAG.
-//    - Bổ sung toàn diện các game tag chuẩn cho Thực phẩm (FOOD_ITEM_TAG, SNACK_TAG, FISH_ITEM_TAG...) và Y tế (MEDICAL_ITEM_TAG, MEDICAL_SUPPLY_TAG...).
-//    - Thiết lập MASTER ISOLATION SHIELD: Bảo vệ tuyệt đối Thực phẩm, Y tế, Nước uống, Hạt giống không bao giờ dính nhầm tag Hóa Chất.
-// 2. TỐI ƯU HÓA TOÀN DIỆN GIAO DIỆN (UI REFACTOR):
+// Tính năng nâng cấp cốt lõi v1.6.3:
+// 1. KHẮC PHỤC TRIỆT ĐỂ LỖI GÓI HẠT GIỐNG NHẢY NHẦM VÀO HÒM ĐANG MỞ:
+//    - Loại bỏ STORABLE_PACKAGE_TAG khỏi danh mục Hòm Chứa (CONTAINER). Gói hạt giống là vật phẩm gieo trồng, không phải hòm lưu trữ.
+//    - Mở rộng nhận diện tag SEED (SEED, SEED_ITEM_TAG, SEED_TAG, MODIFIED_SEED, FARMING_SUPPLIES, CROP, PLANT).
+//    - Nâng cấp MASTER ISOLATION SHIELD: Bảo vệ tuyệt đối Hạt Giống, Thực phẩm, Y tế, Nước uống không bao giờ bị dính nhầm tag Hóa Chất (CHEMICAL) hoặc Hòm Chứa (CONTAINER).
+// 2. BẢO TOÀN ID BỀN VỮNG CHO HÒM ĐANG MỞ (PERSISTENT ID INTEGRITY):
+//    - Tái cấu trúc GetAvailableInventories(): Quét container trong kho tiệm trước để giữ vững ID gốc (box_..._uniqueId) kèm cấu hình đã lưu của người chơi.
+//    - Nhận diện trạng thái mở (isOpen) trực tiếp qua contentWindow.IsVisible() thay vì sinh ID hash tạm làm reset hòm về mặc định.
+// 3. TỐI ƯU HÓA TOÀN DIỆN GIAO DIỆN & DANH MỤC TAG:
 //    - Lưới chọn nhiều Tag 2 cột cân xứng (418px) + Tag Kho Chung toàn hàng (842px).
-//    - Nút bấm to rõ cao 32px, màu sắc trực quan (xanh ngọc khi chọn, xám tối khi chưa chọn).
-//    - Badge hiển thị tag và mức ưu tiên trong thẻ hòm đồ gọn gàng, thoáng đãng, chống tràn mép.
-// 3. TINH GỌN & HỢP NHẤT TAG THÔNG MINH (21 TAG TỔNG CỘNG):
-//    - Gộp Súng + Phụ kiện -> Súng & Phụ Kiện Súng (GUN).
-//    - Gộp Đạn + Thuốc nổ -> Đạn Dược & Thuốc Nổ (AMMO).
-//    - Gộp Nước + Bộ lọc -> Nước Uống & Bộ Lọc Nước (DRINK).
-//    - Gộp Rượu + Thuốc lá -> Rượu Bia & Thuốc Lá (ALCOHOL).
-//    - Gộp Mô-đun + Năng lượng -> Mô-Đun & Pin Năng Lượng (MODULE).
-//    - Gộp Tài liệu + Vé số -> Tài Liệu, Thẻ Từ & Vé Số (DOCUMENT).
-//    - Gộp Gia dụng + Nghệ thuật -> Đồ Gia Dụng & Nghệ Thuật (HOUSEHOLD).
-//    - BẢO TOÀN ĐỘC LẬP: Hàng cấm (CONTRABAND) và Chất gây nghiện (ADDICTIVE) luôn giữ riêng!
-// 4. TƯƠNG THÍCH NGƯỢC 100%: Tự động chuyển đổi cấu hình cũ sang danh mục mới mà không mất dữ liệu.
-// 5. TẬN DỤNG 100% NATIVE API: Quét Tab hòm nâng cấp (MachineryTabs), quét đệ quy hòm lồng hòm.
+//    - 21 danh mục tag tinh gọn, chuẩn mực, hỗ trợ hòm nâng cấp 2 Tab và quét đệ quy hòm lồng hòm.
 // =========================================================================
 
 public class SmartInventorySortMod : IMod
@@ -50,7 +40,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.2 (Khắc phục triệt để phân loại tag Hóa chất vs Thực phẩm/Y tế).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.3 (Khắc phục lỗi Gói Hạt Giống nhảy nhầm vào Hòm Đang Mở + Bảo toàn ID hòm).");
             }
 
             if (uiObject == null)
@@ -58,7 +48,7 @@ public class SmartInventorySortMod : IMod
                 uiObject = new GameObject("SmartCategorySortUI");
                 uiObject.AddComponent<SmartCategorySortController>();
                 UnityEngine.Object.DontDestroyOnLoad(uiObject);
-                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.2.");
+                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.3.");
             }
         }
         catch (Exception ex)
@@ -387,7 +377,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.skin.window.fontSize = 14;
 
         // VẼ 1 CỬA SỔ DUY NHẤT (Chống đè cửa sổ, chống kéo ra kéo vào)
-        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.2)");
+        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.3)");
     }
 
     private void DrawMainWindow(int windowId)
@@ -1093,13 +1083,13 @@ public class SmartCategorySortController : MonoBehaviour
         if (item.IsTag("ORGAN") || item.IsTag("ORGAN_ITEM_TAG") || item.IsTag("ORGANIC_ORGAN_TAG") || item.IsTag("HUMAN_ORGAN_TAG") || item.IsTag("HARVESTED_ORGAN_TAG") || item.IsTag("ORGAN_TRANSPORT_CONTAINER_TAG")) tags.Add("ORGAN");
 
         // Hạt giống & Cây trồng
-        if (item.IsTag("SEED") || item.IsTag("SEED_ITEM_TAG") || item.IsTag("MODIFIED_SEED") || item.IsTag("FARMING_SUPPLIES")) tags.Add("SEED");
+        if (item.IsTag("SEED") || item.IsTag("SEED_ITEM_TAG") || item.IsTag("SEED_TAG") || item.IsTag("MODIFIED_SEED") || item.IsTag("FARMING_SUPPLIES") || item.IsTag("CROP") || item.IsTag("PLANT") || item.IsTag("FARMING")) tags.Add("SEED");
 
         // Đồ gia dụng & Nghệ thuật
         if (item.IsTag("HOUSEHOLD_GOOD") || item.IsTag("LUXURY_ITEM") || item.IsTag("ART")) tags.Add("HOUSEHOLD");
 
-        // Hòm, két chứa đồ
-        if (item.IsTag("CONTAINER_TAG") || item.IsTag("SUPPLY_CRATE") || item.IsTag("STORAGE") || item.IsTag("SAFE_TAG") || item.IsTag("POUCH_TAG") || item.IsTag("STORABLE_PACKAGE_TAG") || item.IsTag("CAGE_TAG")) tags.Add("CONTAINER");
+        // Hòm, két chứa đồ (ĐÃ LOẠI BỎ HOÀN TOÀN STORABLE_PACKAGE_TAG ĐỂ KHÔNG NHẬN NHẦM GÓI HẠT GIỐNG)
+        if (item.IsTag("CONTAINER_TAG") || item.IsTag("SUPPLY_CRATE") || item.IsTag("STORAGE") || item.IsTag("SAFE_TAG") || item.IsTag("POUCH_TAG") || item.IsTag("CAGE_TAG") || item.IsTag("BACKPACK_TAG") || item.IsTag("SMUGGLER_BAY")) tags.Add("CONTAINER");
 
         // Phế liệu
         if (item.IsTag("JUNK")) tags.Add("JUNK");
@@ -1108,7 +1098,9 @@ public class SmartCategorySortController : MonoBehaviour
         if (tags.Count == 0)
         {
             string id = (item.identifier ?? "").ToLowerInvariant();
-            if (id.Contains("pill") || id.Contains("bandage") || id.Contains("firstaid") || id.Contains("injector") || id.Contains("stim") || id.Contains("medical") || id.Contains("medicine") || id.StartsWith("med_")) tags.Add("MEDICAL");
+            string n = (item.name ?? "").ToLowerInvariant();
+            if (id.Contains("seed") || id.Contains("grain") || id.Contains("spore") || n.Contains("hạt giống") || n.Contains("gói hạt") || n.Contains("túi hạt")) tags.Add("SEED");
+            else if (id.Contains("pill") || id.Contains("bandage") || id.Contains("firstaid") || id.Contains("injector") || id.Contains("stim") || id.Contains("medical") || id.Contains("medicine") || id.StartsWith("med_")) tags.Add("MEDICAL");
             else if (id.Contains("food") || id.Contains("bread") || id.Contains("meat") || id.Contains("cheese") || id.Contains("snack") || id.Contains("nutrifruit") || id.Contains("potato") || id.Contains("crop") || id.Contains("mushroom") || id.Contains("canned") || id.Contains("ration")) tags.Add("FOOD");
             else if (id.Contains("water") || id.Contains("drink") || id.Contains("juice") || id.Contains("water_filter") || id.Contains("purif") || id.Contains("water_tablet") || id.Contains("filter") || id.Contains("soda") || id.Contains("cola")) tags.Add("DRINK");
             else if (id.Contains("wine") || id.Contains("beer") || id.Contains("vodka") || id.Contains("alcohol") || id.Contains("cigar") || id.Contains("smoke") || id.Contains("tobacco") || id.Contains("cigarette")) tags.Add("ALCOHOL");
@@ -1120,13 +1112,14 @@ public class SmartCategorySortController : MonoBehaviour
             else if (id.Contains("knife") || id.Contains("sword") || id.Contains("crowbar")) tags.Add("MELEE");
             else if (id.Contains("module") || id.Contains("battery") || id.Contains("energy_cell")) tags.Add("MODULE");
             else if (id.Contains("paper") || id.Contains("card") || id.Contains("document") || id.Contains("lottery") || id.Contains("ticket")) tags.Add("DOCUMENT");
-            else if (id.Contains("seed")) tags.Add("SEED");
+            else if (id.Contains("container") || id.Contains("box") || id.Contains("crate") || id.Contains("chest") || id.Contains("safe")) tags.Add("CONTAINER");
         }
 
-        // 5. MASTER ISOLATION SHIELD: Bảo vệ tuyệt đối Thực phẩm, Y tế, Nước uống, Hạt giống không bao giờ bị dính nhầm tag Hóa Chất
+        // 5. MASTER ISOLATION SHIELD: Bảo vệ tuyệt đối Thực phẩm, Y tế, Nước uống, Hạt giống không bao giờ bị dính nhầm tag Hóa Chất hay Hòm Chứa
         if (tags.Contains("FOOD") || tags.Contains("MEDICAL") || tags.Contains("DRINK") || tags.Contains("ALCOHOL") || tags.Contains("SEED"))
         {
             tags.Remove("CHEMICAL");
+            tags.Remove("CONTAINER");
         }
 
         if (tags.Count == 0) tags.Add("GENERAL");
@@ -1155,7 +1148,7 @@ public class SmartCategorySortController : MonoBehaviour
         if (t == "DOCUMENT" || t == "LOTTERY") { tags.Add("DOCUMENT"); return; }
         if (t == "ORGAN") { tags.Add("ORGAN"); return; }
         if (t == "MACHINE" || t == "MODULE" || t == "NODE" || t == "HYDROPONIC_MODULE" || t == "ALARM_MODULE" || t == "PRINTER_MODULE" || t == "EVAPORATOR_MODULE" || t == "ENERGY_CELL" || t == "ENERGY") { tags.Add("MODULE"); return; }
-        if (t == "SEED" || t == "MODIFIED_SEED" || t == "FARMING_SUPPLIES") { tags.Add("SEED"); return; }
+        if (t == "SEED" || t == "MODIFIED_SEED" || t == "FARMING_SUPPLIES" || t == "SEED_ITEM_TAG" || t == "SEED_TAG" || t == "CROP" || t == "PLANT") { tags.Add("SEED"); return; }
         if (t == "LUXURY_ITEM" || t == "HOUSEHOLD_GOOD" || t == "ART") { tags.Add("HOUSEHOLD"); return; }
         if (t == "CONTAINER" || t == "CONTAINER_TAG" || t == "STORAGE") { tags.Add("CONTAINER"); return; }
         if (t == "JUNK") { tags.Add("JUNK"); return; }
@@ -1519,45 +1512,8 @@ public class SmartCategorySortController : MonoBehaviour
             AddIfValid(list, seenInvs, "hidden_stash", "🕵️ Kho Lậu / Hòm Ẩn", emporium.hiddenElement, "CONTRABAND", false);
         }
 
-        // 1. Quét tất cả cửa sổ hòm đang mở (WindowsHandler)
-        try
-        {
-            if (WindowsHandler.current != null && WindowsHandler.current.visibleWindows != null)
-            {
-                foreach (PixelWindow pw in WindowsHandler.current.visibleWindows)
-                {
-                    if (pw == null) continue;
-
-                    GameItem parentItem = (pw.parentItems != null && pw.parentItems.Count > 0) ? pw.parentItems[0] : null;
-                    string rawName = !string.IsNullOrEmpty(pw.titleString) ? pw.titleString : (parentItem != null ? parentItem.name : "Hòm Mở");
-
-                    // 🛑 BỎ QUA GÓI HẠT GIỐNG, HỘP VIÊN LỌC NƯỚC, HỘP ĐẠN, KÉT BIA...
-                    if (!IsGeneralStorageContainer(parentItem, rawName)) continue;
-
-                    List<GameGridInventory> storages = GetInventoriesFromWindow(pw);
-                    if (storages == null || storages.Count == 0) continue;
-
-                    string defTag = DetectDefaultTagId(rawName, parentItem);
-                    string id = GetContainerPersistentId(parentItem, rawName);
-                    int shortUid = (parentItem != null && parentItem.uniqueId > 0) ? parentItem.uniqueId : Math.Abs(pw.GetHashCode() % 1000);
-
-                    for (int sIdx = 0; sIdx < storages.Count; sIdx++)
-                    {
-                        var ggi = storages[sIdx];
-                        if (ggi != null && !seenInvs.Contains(ggi))
-                        {
-                            string tabSuffix = storages.Count > 1 ? (" [Tab " + (sIdx + 1) + "/" + storages.Count + "]") : "";
-                            string tabId = storages.Count > 1 ? (id + "_tab" + (sIdx + 1)) : id;
-                            string displayName = "🔓 " + rawName + tabSuffix + " (#" + shortUid + ") [Đang Mở]";
-                            AddIfValid(list, seenInvs, tabId, displayName, ggi, defTag, true);
-                        }
-                    }
-                }
-            }
-        }
-        catch {}
-
-        // 2. Quét sâu các món đồ là hòm/túi (containers) đặt trong TẤT CẢ các kho tiệm
+        // 1. Quét sâu các món đồ là hòm/túi (containers) đặt trong TẤT CẢ các kho tiệm TRƯỚC TIÊN
+        // (Đảm bảo luôn dùng GameItem thực để sinh Persistent ID bền vững, không bao giờ bị mất cấu hình khi mở hòm)
         try
         {
             if (emporium != null)
@@ -1620,6 +1576,17 @@ public class SmartCategorySortController : MonoBehaviour
                     string defTag = DetectDefaultTagId(it.name, it);
                     int shortUid = (it.uniqueId > 0) ? it.uniqueId : Math.Abs(it.GetHashCode() % 1000);
 
+                    // Kiểm tra xem hòm này có đang mở cửa sổ trên màn hình không
+                    bool isOpen = false;
+                    try
+                    {
+                        if (it.contentWindow != null && it.contentWindow.IsVisible()) isOpen = true;
+                    }
+                    catch {}
+
+                    string statusPrefix = isOpen ? "🔓 " : "💼 ";
+                    string statusSuffix = isOpen ? " [Đang Mở]" : (" [" + entry.locationName + "]");
+
                     for (int sIdx = 0; sIdx < storages.Count; sIdx++)
                     {
                         var ggi = storages[sIdx];
@@ -1627,7 +1594,53 @@ public class SmartCategorySortController : MonoBehaviour
                         {
                             string tabSuffix = storages.Count > 1 ? (" [Tab " + (sIdx + 1) + "/" + storages.Count + "]") : "";
                             string tabId = storages.Count > 1 ? (id + "_tab" + (sIdx + 1)) : id;
-                            string displayName = "💼 " + it.name + tabSuffix + " (#" + shortUid + ") [" + entry.locationName + "]";
+                            string displayName = statusPrefix + it.name + tabSuffix + " (#" + shortUid + ")" + statusSuffix;
+                            AddIfValid(list, seenInvs, tabId, displayName, ggi, defTag, true);
+                        }
+                    }
+                }
+            }
+        }
+        catch {}
+
+        // 2. Quét dự phòng các cửa sổ hòm đang mở từ nguồn ngoài (WindowsHandler)
+        try
+        {
+            if (WindowsHandler.current != null && WindowsHandler.current.visibleWindows != null)
+            {
+                foreach (PixelWindow pw in WindowsHandler.current.visibleWindows)
+                {
+                    if (pw == null || !pw.IsVisible()) continue;
+
+                    List<GameGridInventory> storages = GetInventoriesFromWindow(pw);
+                    if (storages == null || storages.Count == 0) continue;
+
+                    // Bỏ qua nếu inventory này đã được quản lý từ danh sách kho tiệm
+                    bool allSeen = true;
+                    foreach (var s in storages)
+                    {
+                        if (s != null && !seenInvs.Contains(s)) { allSeen = false; break; }
+                    }
+                    if (allSeen) continue;
+
+                    GameItem parentItem = (pw.parentItems != null && pw.parentItems.Count > 0) ? pw.parentItems[0] : null;
+                    string rawName = !string.IsNullOrEmpty(pw.titleString) ? pw.titleString : (parentItem != null ? parentItem.name : "Hòm Mở");
+
+                    // 🛑 BỎ QUA GÓI HẠT GIỐNG, HỘP VIÊN LỌC NƯỚC, HỘP ĐẠN, KÉT BIA...
+                    if (!IsGeneralStorageContainer(parentItem, rawName)) continue;
+
+                    string defTag = DetectDefaultTagId(rawName, parentItem);
+                    string id = GetContainerPersistentId(parentItem, rawName);
+                    int shortUid = (parentItem != null && parentItem.uniqueId > 0) ? parentItem.uniqueId : Math.Abs(pw.GetHashCode() % 1000);
+
+                    for (int sIdx = 0; sIdx < storages.Count; sIdx++)
+                    {
+                        var ggi = storages[sIdx];
+                        if (ggi != null && !seenInvs.Contains(ggi))
+                        {
+                            string tabSuffix = storages.Count > 1 ? (" [Tab " + (sIdx + 1) + "/" + storages.Count + "]") : "";
+                            string tabId = storages.Count > 1 ? (id + "_tab" + (sIdx + 1)) : id;
+                            string displayName = "🔓 " + rawName + tabSuffix + " (#" + shortUid + ") [Đang Mở]";
                             AddIfValid(list, seenInvs, tabId, displayName, ggi, defTag, true);
                         }
                     }

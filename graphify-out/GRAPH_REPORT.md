@@ -1,17 +1,17 @@
 # Graph Report - Probably Stolen  (2026-11-20)
 
 ## Corpus Check
-- 30 files · ~15,424 words
+- 29 files · ~15,512 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 6 file(s) not represented in the graph (top: .xml 5, (none) 1)
 
 ## Summary
-- 197 nodes · 293 edges · 26 communities (7 shown, 19 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.95)
+- 196 nodes · 294 edges · 24 communities (8 shown, 16 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.95)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f3433203`
+- Built from commit: `61c1d829`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -24,7 +24,6 @@
 - GameItem
 - json
 - Probably Stolen - Native IMod Collection (Bộ Mod Tối Ưu & Tiện Ích Thuần Việt)
-- Bàn Giao Tiến Độ Kỹ Thuật (Checkpoint) - Hoàn Tất 100%
 - SmartCategorySortController.GetAvailableInventories
 
 ## God Nodes (most connected - your core abstractions)
@@ -48,7 +47,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (26 total, 19 thin omitted)
+## Communities (24 total, 16 thin omitted)
 
 ### Community 0 - "SmartInventorySortMod.cs"
 Cohesion: 0.08
@@ -78,22 +77,26 @@ Nodes (3): CustomerDemandHighlightMod, LotteryForesightMod, DisablePackShelvesPa
 Cohesion: 0.18
 Nodes (10): 1. 📦 Sắp Xếp & Phân Loại Kho Đa Hòm Thông Minh (`SmartInventorySort` v1.2.0), 2. 👁️ Máy Dò Dị Nhân & Ngụy Nhân (`AugmentedDetector`), 💡 Các cơ chế hiển thị trực quan 3 tầng:, 🛠️ Các Mod Bổ Trợ Khác Trong Bộ Sưu Tập, 💡 Các tính năng nổi bật:, 🌟 Danh Sách Các Mod Chính, 📜 Giấy Phép & Tuyên Bố Miễn Trừ Trách Nhiệm, 🔨 Hướng Dẫn Biên Dịch Mã Nguồn (Build from Source) (+2 more)
 
+### Community 17 - "SmartCategorySortController.GetAvailableInventories"
+Cohesion: 0.28
+Nodes (3): Bàn Giao Tiến Độ Kỹ Thuật (Checkpoint) - Hoàn Tất 100%, Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.6.3):, NamedInventory
+
 ## Knowledge Gaps
-- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `SmartCategorySortController` connect `SmartCategorySortController` to `SmartInventorySortMod.cs`, `SmartCategorySortController.GetAvailableInventories`, `GameItem`, `CustomerDemandHighlightMod`?**
-  _High betweenness centrality (0.243) - this node is a cross-community bridge._
+  _High betweenness centrality (0.257) - this node is a cross-community bridge._
 - **Should `SmartInventorySortMod.cs` be split into smaller, more focused modules?**
   _Cohesion score 0.07954545454545454 - nodes in this community are weakly interconnected._
 - **Why does `SmartInventorySortMod` connect `CustomerDemandHighlightMod` to `SmartInventorySortMod.cs`?**
-  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+  _High betweenness centrality (0.064) - this node is a cross-community bridge._
 - **Should `CustomerDemandHighlightMod` be split into smaller, more focused modules?**
   _Cohesion score 0.10952380952380952 - nodes in this community are weakly interconnected._
 - **Why does `LotteryForesightMod` connect `GameItem` to `CustomerDemandHighlightMod`, `AugmentedDetectorMod.cs`?**
-  _High betweenness centrality (0.046) - this node is a cross-community bridge._
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._
 - **Should `SmartCategorySortController` be split into smaller, more focused modules?**
   _Cohesion score 0.11942959001782531 - nodes in this community are weakly interconnected._
 - **Should `AugmentedDetectorMod.cs` be split into smaller, more focused modules?**

@@ -7,7 +7,6 @@
   "5": "GameItem",
   "6": "json",
   "7": "Probably Stolen - Native IMod Collection (Bộ Mod Tối Ưu & Tiện Ích Thuần Việt)",
-  "8": "Bàn Giao Tiến Độ Kỹ Thuật (Checkpoint) - Hoàn Tất 100%",
   "9": "show_indices.ps1",
   "10": "backup_baishe.ps1",
   "11": "build_augmented_detector.ps1",
@@ -23,6 +22,5 @@
   "21": "update_es3.py",
   "22": "update_es3_aug.py",
   "23": "update_es3_smart_sort.py",
-  "24": "verify_lottery_dll.ps1",
-  "25": "scratch_inspect.ps1"
+  "24": "verify_lottery_dll.ps1"
 }

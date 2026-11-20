@@ -3,34 +3,29 @@
 - **Dự án**: Bộ Mod & Việt Hóa game Probably Stolen (Bản IMod Native)
 - **Thư mục lưu trữ**: `D:\VibeCode\Probably Stolen`
 - **Kho lưu trữ GitHub**: [https://github.com/lvh0210/Probably-Stolen-Mods](https://github.com/lvh0210/Probably-Stolen-Mods)
-- **Trạng thái**: Hoàn tất 100% việc khắc phục triệt để lỗi phân loại tag Hóa Chất (`CHEMICAL`) nhận nhầm Y tế và Thực phẩm (`SmartInventorySort` v1.6.2).
+- **Trạng thái**: Hoàn tất 100% việc khắc phục lỗi Gói Hạt Giống nhảy nhầm vào Hòm Đang Mở và bảo toàn ID bền vững cho hòm đồ (`SmartInventorySort` v1.6.3).
 
-## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.6.2):
-1. **Khắc Phục Triệt Để Phân Loại Nhầm Giữa Hóa Chất Với Y Tế & Thực Phẩm**:
-   - **Thanh lọc các Tag dùng chung quá rộng**:
-     - Loại bỏ `LIQUID_CONTAINER_TAG`: Tag này được hệ thống engine gắn cho mọi bình chứa chất lỏng (bao gồm sữa, nước trái cây, súp, si-rô thuốc, dung dịch tiêm truyền y tế), khiến hòm hóa chất trước đây nhận nhầm toàn bộ đồ ăn và thuốc dạng lỏng.
-     - Loại bỏ `CHEM_ITEM_TAG`: Tag này gắn trên các nông sản có cấu tạo hóa sinh tự nhiên (khoai tây, hạt cà phê, nấm, huyết thanh...), gây nhầm sang hóa chất.
-     - Loại bỏ `LIQUID_CONTAINER_DROPPER_TAG` và `LIQUID_LUCK_TAG`: Tránh nhận nhầm thuốc nhỏ mắt, dụng cụ y tế và đồ ăn may mắn.
-     - Loại bỏ `LIQUID_CHEMICAL_CONTAMINANT`: Tránh nhận nhầm nước ô nhiễm/thực phẩm hỏng.
-   - **Bổ sung toàn diện Game Tag chuẩn cho Thực phẩm và Y tế**:
-     - `FOOD`: Thêm `FOOD_ITEM_TAG`, `SNACK_TAG`, `FISH_ITEM_TAG`, `EDIBLE_CALORIES`, `FISH_FOOD`.
-     - `MEDICAL`: Thêm `MEDICAL_ITEM_TAG`, `MEDICAL_SUPPLY_TAG`, `SUPPLIES_MEDICAL`, `AMENITIES_MEDICAL_TAG`.
-     - `DRINK`: Thêm `WATER_BOTTLE_ITEM_TAG`.
-   - **Thiết lập Master Isolation Shield (Lá chắn bảo vệ chéo đa tầng)**:
-     - Nếu một vật phẩm đã được xác định mang bất kỳ tag nào trong nhóm: `FOOD`, `MEDICAL`, `DRINK`, `ALCOHOL`, `SEED`, hệ thống kích hoạt thu hồi dứt điểm tag `CHEMICAL` (`tags.Remove("CHEMICAL")`).
-     - Đảm bảo tính toán toàn vẹn tuyệt đối: Hòm Hóa Chất (`CHEMICAL`) chỉ chấp nhận đúng các loại hóa chất, axit, clo, thuốc thử tinh khiết (`CommonChemicalSupplies`, `RestrictedChemicalSupplies`, lọ hóa chất, bình axit) và tuyệt đối không bao giờ rút đồ y tế hoặc thực phẩm về hòm hóa chất.
+## Các Tối Ưu Hóa & Cải Tiến Cốt Lõi (`SmartInventorySort` v1.6.3):
+1. **Khắc Phục Lỗi Gói Hạt Giống Nhảy Nhầm Vào Hòm Đang Mở**:
+   - **Loại bỏ `STORABLE_PACKAGE_TAG` khỏi danh mục Hòm Chứa (`CONTAINER`)**:
+     - Trong engine game, các túi hạt giống (`nutrifruit_seed_packet`, `lifeweed_seed_packet`...) mang tag `STORABLE_PACKAGE_TAG`.
+     - Ở các bản trước, tag này bị xếp nhầm vào nhóm `CONTAINER` ("📦 Hòm, Rương & Két"), khiến gói hạt giống bị gắn đồng thời 2 tag: `SEED` và `CONTAINER`.
+     - Khi một hòm đang mở có tag `CONTAINER` (hoặc `GENERAL`), gói hạt giống bị hòm này tiếp nhận và kéo về thay vì vào hòm hạt giống.
+     - Sau khi loại bỏ, gói hạt giống trở về đúng 100% bản chất là vật phẩm hạt giống nông nghiệp (`SEED`).
+   - **Mở rộng nhận diện tag `SEED`**:
+     - Bổ sung `SEED_TAG`, `SEED_ITEM_TAG`, `MODIFIED_SEED`, `FARMING_SUPPLIES`, `CROP`, `PLANT`, `FARMING`.
+     - Thêm kiểm tra từ khóa định danh và tên gọi tiếng Việt (`hạt giống`, `gói hạt`, `túi hạt`, `seed`, `spore`) trong bộ fallback.
+   - **Nâng cấp Master Isolation Shield**:
+     - Bổ sung `tags.Remove("CONTAINER")` cho toàn bộ nhóm vật phẩm tiêu thụ: `SEED`, `FOOD`, `MEDICAL`, `DRINK`, `ALCOHOL`.
+     - Đảm bảo tuyệt đối không có bất kỳ hạt giống, đồ ăn, thuốc hay nước uống nào bị gắn tag hòm chứa lưu trữ.
 
-2. **Tối Ưu Thứ Tự Nhận Diện Fallback (Theo Chuỗi Định Danh)**:
-   - Ưu tiên kiểm tra Y tế (`MEDICAL`), Thực phẩm (`FOOD`), Nước uống (`DRINK`), Đồ uống có cồn (`ALCOHOL`) trước khi kiểm tra Hóa chất (`CHEMICAL`).
-   - Tinh chỉnh các từ khóa nhận diện hóa chất: `chem`, `acid_bottle`, `reagent`, `chlorine`, `solvent`, `purity_tube`, `chemical`.
+2. **Bảo Toàn ID Bền Vững Cho Hòm Đang Mở (Persistent ID Integrity)**:
+   - **Nguyên nhân**: Khi người chơi mở một hòm đồ trên màn hình, cửa sổ `PixelWindow` trong `WindowsHandler.current.visibleWindows` không chứa tham chiếu `parentItems`, khiến hàm sinh ID tạo ra ID băm tạm thời (`box_hash_...`) và đè lên ID cố định của hòm trong kho tiệm (`box_..._uniqueId`). Hệ quả là cấu hình tag người chơi đã cài đặt (như tag Hạt giống) bị tạm thời mất hiệu lực trong lúc mở hòm và quay về tag mặc định.
+   - **Giải pháp**: Tái cấu trúc hàm `GetAvailableInventories()` để quét toàn bộ container cố định trong kho tiệm trước tiên, giữ nguyên ID gốc kèm mọi cấu hình tag/mức ưu tiên đã lưu. Trạng thái mở của hòm được nhận diện trực tiếp qua `it.contentWindow.IsVisible()` để hiển thị huy hiệu `🔓 [Đang Mở]` mà không làm thay đổi ID hay cấu hình của hòm.
 
-3. **Giao Diện & Hệ Thống Đã Được Tối Ưu Ở Bản v1.6.1 Tiếp Tục Phát Huy Hiệu Quả**:
-   - Lưới chọn nhiều Tag 2 cột cân xứng 418px + nút Kho Chung toàn hàng 842px, chiều cao nút 32px chuẩn công thái học.
-   - 21 danh mục tag tinh gọn, hỗ trợ đầy đủ hòm nâng cấp 2 Tab và hòm lồng hòm.
+3. **Đóng Gói & Triển Khai Thực Tế**:
+   - Nâng cấp phiên bản lên `v1.6.3` trong `SmartInventorySortMod.cs` và `manifest.xml`.
+   - Biên dịch thành công thư viện `SmartInventorySort.dll` (v1.6.3) với `ExitCode: 0`.
+   - Sao chép trực tiếp vào thư mục cài đặt game: `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`.
 
-4. **Đóng Gói & Triển Khai Thực Tế**:
-   - Nâng cấp phiên bản lên `v1.6.2` trong `SmartInventorySortMod.cs` và `manifest.xml`.
-   - Biên dịch thành công thư viện `SmartInventorySort.dll` (v1.6.2) với `ExitCode: 0`.
-   - Triển khai trực tiếp vào thư mục cài đặt game: `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`.
-
-*Cập nhật tự động: v1.6.2 | 2026-11-20 19:45*
+*Cập nhật tự động: v1.6.3 | 2026-11-20 20:12*

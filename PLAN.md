@@ -121,3 +121,9 @@
   - [x] 23.3: Thiết lập Master Isolation Shield ngăn ngừa tuyệt đối cross-tag CHEMICAL với FOOD/MEDICAL/DRINK.
   - [x] 23.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.2) và triển khai vào game.
   - [x] 23.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.
+- [x] **Chặng 24: Khắc Phục Lỗi Gói Hạt Giống Nhảy Nhầm Vào Hòm Đang Mở (v1.6.3)**
+  - [x] 24.1: Loại bỏ `STORABLE_PACKAGE_TAG` khỏi nhóm `CONTAINER`, mở rộng nhận diện tag `SEED`.
+  - [x] 24.2: Bổ sung `tags.Remove("CONTAINER")` vào Master Isolation Shield cho SEED/FOOD/MEDICAL/DRINK.
+  - [x] 24.3: Tái cấu trúc `GetAvailableInventories()` bảo toàn ID bền vững cho hòm đang mở, tránh reset về cấu hình mặc định.
+  - [x] 24.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.3) và triển khai vào game.
+  - [x] 24.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.

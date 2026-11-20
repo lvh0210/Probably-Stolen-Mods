@@ -3,10 +3,12 @@
   <ID>SmartInventorySort</ID>
   <Name>Sắp Xếp &amp; Phân Loại Kho Thông Minh (Smart Category &amp; Inventory Sort)</Name>
   <Author>Antigravity</Author>
-  <ModVersion>1.6.2</ModVersion>
+  <ModVersion>1.6.3</ModVersion>
   <Description>Bộ công cụ tối ưu hóa kho hàng đa năng:
 1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu cấu hình hòm, F3: Gom &amp; Phân loại nhanh):
-- Khắc phục triệt để lỗi hòm Hóa chất (CHEMICAL) gom nhầm Thực phẩm và Y tế: Thanh lọc các tag dùng chung quá rộng (LIQUID_CONTAINER_TAG, LIQUID_CONTAINER_DROPPER_TAG, LIQUID_LUCK_TAG, CHEM_ITEM_TAG) và thiết lập Master Isolation Shield bảo vệ chéo Thực phẩm, Y tế, Nước uống, Hạt giống.
+- Khắc phục triệt để lỗi gói hạt giống nhảy nhầm vào hòm đang mở: Loại bỏ STORABLE_PACKAGE_TAG khỏi danh mục CONTAINER, mở rộng nhận diện SEED và bổ sung bảo vệ chéo Master Isolation Shield cho SEED/FOOD/MEDICAL/DRINK.
+- Bảo toàn ID bền vững cho hòm đang mở: Quét container kho tiệm trước tiên để giữ nguyên ID gốc (box_..._uniqueId) cùng cấu hình người chơi đã cài đặt, tránh tình trạng khi mở hòm bị sinh ID tạm box_hash_... làm mất cấu hình.
+- Khắc phục triệt để lỗi hòm Hóa chất (CHEMICAL) gom nhầm Thực phẩm và Y tế qua Master Isolation Shield.
 - Tối ưu hóa UI: Giao diện card thoáng đãng, lưới chọn tag 2 cột cân xứng 418px + ô Kho Chung toàn màn hình, nút bấm to rõ 32px, hiển thị badge màu trực quan.
 - Bổ sung danh mục Tag Hóa Chất (CHEMICAL) bao quát toàn bộ hóa chất, axit, clo, độ tinh khiết hóa học theo chuẩn game.
 - Tinh gọn &amp; Hợp nhất thông minh các nhóm tag liên quan (Súng &amp; Phụ kiện, Đạn &amp; Thuốc nổ, Nước &amp; Bộ lọc, Rượu &amp; Thuốc lá, Mô-đun &amp; Pin, Tài liệu &amp; Vé số, Gia dụng &amp; Nghệ thuật), giữ riêng Hàng cấm và Chất gây nghiện.
