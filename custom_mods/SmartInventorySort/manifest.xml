@@ -3,12 +3,14 @@
   <ID>SmartInventorySort</ID>
   <Name>Sắp Xếp &amp; Phân Loại Kho Thông Minh (Smart Category &amp; Inventory Sort)</Name>
   <Author>Antigravity</Author>
-  <ModVersion>1.6.0</ModVersion>
+  <ModVersion>1.6.1</ModVersion>
   <Description>Bộ công cụ tối ưu hóa kho hàng đa năng:
 1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu cấu hình hòm, F3: Gom &amp; Phân loại nhanh):
+- Tối ưu hóa UI: Giao diện card thoáng đãng, lưới chọn tag 2 cột cân xứng 418px + ô Kho Chung toàn màn hình, nút bấm to rõ 32px, hiển thị badge màu trực quan.
+- Bổ sung danh mục Tag Hóa Chất (CHEMICAL) bao quát toàn bộ hóa chất, axit, clo, độ tinh khiết hóa học theo chuẩn game.
+- Tinh gọn &amp; Hợp nhất thông minh các nhóm tag liên quan (Súng &amp; Phụ kiện, Đạn &amp; Thuốc nổ, Nước &amp; Bộ lọc, Rượu &amp; Thuốc lá, Mô-đun &amp; Pin, Tài liệu &amp; Vé số, Gia dụng &amp; Nghệ thuật), giữ riêng Hàng cấm và Chất gây nghiện.
 - Tận dụng 100% API gốc của game: Quét chuẩn xác toàn bộ Tab khi hòm nâng cấp từ 1 tab lên 2 tab (MachineryTabs), hiển thị riêng từng Tab [Tab 1/2], [Tab 2/2] trên menu F2.
 - Quét đệ quy hòm lồng trong hòm: Sử dụng GameItem.FindAllChildItems() tự động lấy sạch đồ nằm trong các hòm con bên trong kho hòm mở rộng.
-- Phân loại chuẩn 100% theo Tag gốc game (IsTag, itemTypes, GetGameItemType), loại bỏ quy tắc cô lập thủ công, phân định tuyệt đối Lọc Nước vs Thực Phẩm.
 - Cơ chế 1 hòm chọn nhiều Tag (Multi-Tag Selection) + Thứ tự ưu tiên (Priority 1..99).
 - Chống click chuột xuyên qua menu 100% qua 11 cổng Harmony bảo vệ.
 2. Sắp xếp khít chặt: Vô hiệu hóa phân chia kệ ngang (PackShelves), kích hoạt quét từng ô (PackFirstFit) và tự động xoay ngang/dọc (Auto-Rotate 90°) giúp nén gọn, loại bỏ khoảng trống thừa và không bị đè chồng item.</Description>

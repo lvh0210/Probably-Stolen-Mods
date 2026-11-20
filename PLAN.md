@@ -109,3 +109,9 @@
   - [x] 21.3: Chuẩn hóa 100% theo Tag gốc của game (`IsTag`, `itemTypes`, `GetGameItemType()`), loại bỏ toàn bộ các quy tắc cô lập thủ công, phân định tuyệt đối Lọc Nước vs Thực Phẩm
   - [x] 21.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.0) và triển khai vào thư mục game
   - [x] 21.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub
+- [x] **Chặng 22: Tối Ưu Giao Diện UI, Bổ Sung Tag Hóa Chất & Tinh Gọn Hợp Nhất Các Tag Trùng Lặp (v1.6.1)**
+  - [x] 22.1: Bổ sung tag `CHEMICAL` (🧪 Hóa Chất & Điều Chế) ánh xạ chuẩn các tag game: `CHEMICAL_SUPPLIES`, `CHEM_ITEM_TAG`, `CHEMICAL_PRODUCT_TAG`, `LIQUID_ACID`, `LIQUID_CHLORINE`...
+  - [x] 22.2: Tinh gọn và hợp nhất các nhóm tag liên quan (Súng + Phụ kiện -> Súng & Phụ Kiện; Đạn + Thuốc nổ -> Đạn & Thuốc Nổ; Nước + Lọc nước -> Nước & Lọc Nước; Rượu + Thuốc lá -> Rượu Bia & Thuốc Lá; Mô-đun + Năng lượng -> Mô-Đun & Pin; Tài liệu + Vé số -> Tài Liệu & Thẻ Từ; Đồ gia dụng + Nghệ thuật -> Gia Dụng & Nghệ Thuật). Giữ riêng Hàng cấm (`CONTRABAND`) và Chất gây nghiện (`ADDICTIVE`).
+  - [x] 22.3: Tối ưu hóa UI: bố cục 2 cột cân đối cho bảng chọn tag, responsive scroll, khoảng cách card rộng rãi, badge tag màu sắc trực quan, làm gọn các nút điều khiển.
+  - [x] 22.4: Biên dịch `SmartInventorySort.dll` (v1.6.1) và triển khai vào thư mục game.
+  - [x] 22.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.

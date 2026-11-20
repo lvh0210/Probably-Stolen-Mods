@@ -8,18 +8,25 @@ using UnityEngine.EventSystems;
 using HarmonyLib;
 
 // =========================================================================
-// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.0)
+// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.1)
 // Tác giả: Antigravity AI (VibeCode)
-// Tính năng nâng cấp cốt lõi v1.5.4:
-// 1. BỘ LỌC HÒM CHỨA ĐỒ THỰC THỤ (IsGeneralStorageContainer): Tự động loại bỏ
-// 2. TÁCH TAG ADDICTIVE: Phân định rõ ràng chất gây nghiện hợp pháp (rượu/thuốc lá/kích thích)
-//    với hàng cấm thực sự (CONTRABAND/RESTRICTED/TRAFFICKING)
-//    toàn bộ các gói/hộp chứa 1 món đồ chuyên biệt (túi hạt giống, hộp viên lọc
-//    nước, que thử, hộp đạn, két bia, bao thuốc lá...) khỏi danh sách kho Menu F2!
-// 2. PHÂN LOẠI CHUẨN XÁC 100% THEO GAMEITEMTYPE & LÁ CHẮN MASTER SAFETY SHIELD.
-// 3. TÁCH BIỆT 26 TAG ĐƠN LẺ NGUYÊN BẢN & 1 HÒM CHỌN NHIỀU TAG (MULTI-TAG).
-// 4. HỆ THỐNG THỨ TỰ ƯU TIÊN HÒM (CONTAINER PRIORITY SYSTEM 1 > 2 > 3...).
-// 5. CHỐNG CLICK XUYÊN 100% AIRTIGHT QUA 11 CỔNG HARMONY & NÉN KHÍT 90°.
+// Tính năng nâng cấp cốt lõi v1.6.1:
+// 1. TỐI ƯU HÓA TOÀN DIỆN GIAO DIỆN (UI REFACTOR):
+//    - Lưới chọn nhiều Tag 2 cột cân xứng (418px) + Tag Kho Chung toàn hàng (842px).
+//    - Nút bấm to rõ cao 32px, màu sắc trực quan (xanh ngọc khi chọn, xám tối khi chưa chọn).
+//    - Badge hiển thị tag và mức ưu tiên trong thẻ hòm đồ gọn gàng, thoáng đãng, chống tràn mép.
+// 2. BỔ SUNG TAG HÓA CHẤT (CHEMICAL): Bao quát toàn bộ hóa chất, axit, clo, độ tinh khiết hóa học.
+// 3. TINH GỌN & HỢP NHẤT TAG THÔNG MINH (21 TAG TỔNG CỘNG):
+//    - Gộp Súng + Phụ kiện -> Súng & Phụ Kiện Súng (GUN).
+//    - Gộp Đạn + Thuốc nổ -> Đạn Dược & Thuốc Nổ (AMMO).
+//    - Gộp Nước + Bộ lọc -> Nước Uống & Bộ Lọc Nước (DRINK).
+//    - Gộp Rượu + Thuốc lá -> Rượu Bia & Thuốc Lá (ALCOHOL).
+//    - Gộp Mô-đun + Năng lượng -> Mô-Đun & Pin Năng Lượng (MODULE).
+//    - Gộp Tài liệu + Vé số -> Tài Liệu, Thẻ Từ & Vé Số (DOCUMENT).
+//    - Gộp Gia dụng + Nghệ thuật -> Đồ Gia Dụng & Nghệ Thuật (HOUSEHOLD).
+//    - BẢO TOÀN ĐỘC LẬP: Hàng cấm (CONTRABAND) và Chất gây nghiện (ADDICTIVE) luôn giữ riêng!
+// 4. TƯƠNG THÍCH NGƯỢC 100%: Tự động chuyển đổi cấu hình cũ sang danh mục mới mà không mất dữ liệu.
+// 5. TẬN DỤNG 100% NATIVE API: Quét Tab hòm nâng cấp (MachineryTabs), quét đệ quy hòm lồng hòm.
 // =========================================================================
 
 public class SmartInventorySortMod : IMod
@@ -39,7 +46,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.0 (Game-Native Multi-Tabs + Nested Containers + 100% Game Tag Standard).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.1 (Tối ưu UI + Bổ sung Tag Hóa Chất + Tinh gọn Tag).");
             }
 
             if (uiObject == null)
@@ -47,7 +54,7 @@ public class SmartInventorySortMod : IMod
                 uiObject = new GameObject("SmartCategorySortUI");
                 uiObject.AddComponent<SmartCategorySortController>();
                 UnityEngine.Object.DontDestroyOnLoad(uiObject);
-                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.5.3.");
+                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.1.");
             }
         }
         catch (Exception ex)
@@ -261,7 +268,19 @@ public class ContainerConfig
         if (parts.Length >= 4 && !string.IsNullOrEmpty(parts[3]))
         {
             string[] tags = parts[3].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var t in tags) cfg.SelectedTags.Add(t.Trim());
+            foreach (var rawT in tags)
+            {
+                string t = rawT.Trim();
+                // Tương thích ngược: tự động gom các tag cũ vào tag gộp mới
+                if (t == "ATTACHMENT") cfg.SelectedTags.Add("GUN");
+                else if (t == "EXPLOSIVE") cfg.SelectedTags.Add("AMMO");
+                else if (t == "WATER_FILTER") cfg.SelectedTags.Add("DRINK");
+                else if (t == "TOBACCO") cfg.SelectedTags.Add("ALCOHOL");
+                else if (t == "LOTTERY") cfg.SelectedTags.Add("DOCUMENT");
+                else if (t == "ENERGY") cfg.SelectedTags.Add("MODULE");
+                else if (t == "ART") cfg.SelectedTags.Add("HOUSEHOLD");
+                else cfg.SelectedTags.Add(t);
+            }
         }
         return cfg;
     }
@@ -286,7 +305,7 @@ public class SmartCategorySortController : MonoBehaviour
 
     private bool showMenu = false;
     private bool showAllStorages = false;
-    public Rect windowRect = new Rect(50, 30, 860, 640);
+    public Rect windowRect = new Rect(50, 30, 880, 640);
     private Vector2 scrollPos;
     private Vector2 selectorScrollPos;
     private string statusMessage = "Bấm F2 để ẩn/hiện menu. Bấm F3 để gom và phân loại toàn bộ kho.";
@@ -297,33 +316,27 @@ public class SmartCategorySortController : MonoBehaviour
     private string activeContainerIdForSelection = null;
     private string activeContainerNameForSelection = "";
 
-    // 26 Danh mục Tag đơn lẻ nguyên bản bao quát 100% item và tag game
+    // 21 Danh mục Tag tinh gọn, chuẩn mực bao quát 100% item và tag game
     public static readonly ItemTagDef[] AllTags = new ItemTagDef[]
     {
-        new ItemTagDef("GUN", "🔫 Súng & Vũ Khí Bắn", "Súng"),
+        new ItemTagDef("GUN", "🔫 Súng & Phụ Kiện Súng", "Súng & PK"),
         new ItemTagDef("MELEE", "🗡️ Vũ Khí Cận Chiến (Dao/Kiếm)", "Cận Chiến"),
-        new ItemTagDef("AMMO", "🎯 Đạn Dược (Hộp Đạn/Viên)", "Đạn"),
-        new ItemTagDef("EXPLOSIVE", "💣 Thuốc Nổ, Lựu Đạn & C4", "Chất Nổ"),
-        new ItemTagDef("ATTACHMENT", "🔭 Phụ Kiện Súng (Ống Ngắm/Nòng)", "Phụ Kiện"),
+        new ItemTagDef("AMMO", "💣 Đạn Dược & Thuốc Nổ", "Đạn & Nổ"),
+        new ItemTagDef("ARMOR", "🛡️ Giáp, Mũ & Đồ Bảo Hộ", "Giáp & Mũ"),
         new ItemTagDef("MEDICAL", "💊 Y Tế & Thuốc Men", "Y Tế"),
+        new ItemTagDef("CHEMICAL", "🧪 Hóa Chất & Điều Chế", "Hóa Chất"),
         new ItemTagDef("FOOD", "🍞 Thực Phẩm & Đồ Ăn", "Thực Phẩm"),
-        new ItemTagDef("DRINK", "💧 Nước Uống", "Nước"),
-        new ItemTagDef("WATER_FILTER", "🧪 Lọc Nước & Viên Lọc", "Lọc Nước"),
-        new ItemTagDef("ALCOHOL", "🍾 Rượu Bia & Đồ Uống Cồn", "Rượu"),
-        new ItemTagDef("TOBACCO", "🚬 Thuốc Lá & Xì Gà", "Thuốc Lá"),
+        new ItemTagDef("DRINK", "💧 Nước Uống & Bộ Lọc Nước", "Nước & Lọc"),
+        new ItemTagDef("ALCOHOL", "🍾 Rượu Bia & Thuốc Lá", "Rượu & Thuốc"),
+        new ItemTagDef("ADDICTIVE", "💉 Chất Gây Nghiện (Ma Túy)", "Gây Nghiện"),
         new ItemTagDef("CONTRABAND", "☠️ Hàng Cấm & Độc Dược", "Hàng Cấm"),
-        new ItemTagDef("ADDICTIVE", "💉 Chất Gây Nghiện (Ma Túy/Chất Cấm)", "Gây Nghiện"),
-        new ItemTagDef("ARMOR", "🛡️ Giáp, Mũ & Đồ Bảo Hộ", "Giáp"),
         new ItemTagDef("MATERIAL", "🔩 Vật Liệu & Kim Loại Chế Tạo", "Vật Liệu"),
-        new ItemTagDef("TOOL", "🛠️ Dụng Cụ & Công Cụ Kỹ Thuật", "Dụng Cụ"),
-        new ItemTagDef("DOCUMENT", "📄 Tài Liệu, Bản Vẽ & Thẻ Từ", "Tài Liệu"),
-        new ItemTagDef("LOTTERY", "🎫 Vé Số & Vé Cào", "Vé Số"),
+        new ItemTagDef("TOOL", "🛠️ Dụng Cụ & Sửa Chữa Kỹ Thuật", "Dụng Cụ"),
+        new ItemTagDef("MODULE", "⚡ Mô-Đun Máy Móc & Pin Năng Lượng", "Mô-Đun & Pin"),
+        new ItemTagDef("DOCUMENT", "📄 Tài Liệu, Thẻ Từ & Vé Số", "Tài Liệu & Vé"),
         new ItemTagDef("ORGAN", "🧬 Nội Tạng & Mẫu Sinh Học", "Nội Tạng"),
-        new ItemTagDef("MODULE", "⚡ Mô-Đun, Bo Mạch & Máy Móc", "Mô-Đun"),
-        new ItemTagDef("ENERGY", "🔋 Pin & Nguồn Năng Lượng", "Năng Lượng"),
         new ItemTagDef("SEED", "🌱 Hạt Giống & Nông Sản", "Hạt Giống"),
-        new ItemTagDef("HOUSEHOLD", "🧴 Đồ Gia Dụng & Nước Hoa Xa Xỉ", "Gia Dụng"),
-        new ItemTagDef("ART", "🎨 Nghệ Thuật & Quà Lưu Niệm", "Nghệ Thuật"),
+        new ItemTagDef("HOUSEHOLD", "🎨 Đồ Gia Dụng & Nghệ Thuật Xa Xỉ", "Gia Dụng & NT"),
         new ItemTagDef("CONTAINER", "💼 Hòm, Két & Hộp Chứa Đồ", "Hòm Chứa"),
         new ItemTagDef("JUNK", "🗑️ Phế Liệu & Rác Thải", "Phế Liệu"),
         new ItemTagDef("GENERAL", "📦 Kho Chung (Mọi Đồ Khác)", "Kho Chung")
@@ -370,7 +383,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.skin.window.fontSize = 14;
 
         // VẼ 1 CỬA SỔ DUY NHẤT (Chống đè cửa sổ, chống kéo ra kéo vào)
-        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.5.3)");
+        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.1)");
     }
 
     private void DrawMainWindow(int windowId)
@@ -392,7 +405,7 @@ public class SmartCategorySortController : MonoBehaviour
             DrawMainContainerListPage();
         }
 
-        GUI.DragWindow(new Rect(0, 0, 860, 28));
+        GUI.DragWindow(new Rect(0, 0, 880, 28));
     }
 
     // =========================================================================
@@ -416,7 +429,7 @@ public class SmartCategorySortController : MonoBehaviour
         // Header ghi chú
         GUILayout.BeginHorizontal();
         GUI.color = new Color(0.7f, 0.9f, 1.0f);
-        GUILayout.Label("Danh Sách Hòm Chứa: Thiết lập mức Ưu Tiên (1 là cao nhất) và bấm [🎯 Chọn Tag (Multi) ▾] để chọn nhiều Tag.");
+        GUILayout.Label("Danh Sách Hòm Chứa: Thiết lập mức Ưu Tiên (1 là cao nhất) và bấm [🎯 Chọn Tag ▾] để chọn loại vật phẩm hòm nhận.");
         GUI.color = Color.white;
         GUILayout.EndHorizontal();
 
@@ -456,8 +469,8 @@ public class SmartCategorySortController : MonoBehaviour
 
                 // Dòng 1: Tên hòm, vị trí, kích thước và số món
                 GUILayout.BeginHorizontal();
-                GUI.color = new Color(1.0f, 1.0f, 0.8f);
-                GUILayout.Label(ni.DisplayName, EditorStyles_BoldLabel(), GUILayout.Width(480));
+                GUI.color = new Color(1.0f, 0.95f, 0.7f);
+                GUILayout.Label(ni.DisplayName, EditorStyles_BoldLabel(), GUILayout.Width(500));
                 GUI.color = Color.white;
                 GUILayout.FlexibleSpace();
                 GUI.color = new Color(0.6f, 0.85f, 1.0f);
@@ -465,7 +478,7 @@ public class SmartCategorySortController : MonoBehaviour
                 GUI.color = Color.white;
                 GUILayout.EndHorizontal();
 
-                // Dòng 2: Bộ chọn Ưu Tiên + Badge Trạng Thái / Danh Sách Tag
+                // Dòng 2: Bộ chọn Ưu Tiên + Badge Trạng Thái / Danh Sách Tag + Nút Điều Khiển
                 GUILayout.BeginHorizontal();
 
                 // Bộ chỉnh Ưu Tiên (Priority Selector)
@@ -473,7 +486,7 @@ public class SmartCategorySortController : MonoBehaviour
                 GUILayout.Label("⭐ Ưu Tiên: " + cfg.Priority, EditorStyles_BoldLabel(), GUILayout.Width(95), GUILayout.Height(24));
                 GUI.color = Color.white;
 
-                if (GUILayout.Button("▲", GUILayout.Width(28), GUILayout.Height(22)))
+                if (GUILayout.Button("▲", GUILayout.Width(26), GUILayout.Height(22)))
                 {
                     if (cfg.Priority > 1)
                     {
@@ -481,7 +494,7 @@ public class SmartCategorySortController : MonoBehaviour
                         SaveAssignments();
                     }
                 }
-                if (GUILayout.Button("▼", GUILayout.Width(28), GUILayout.Height(22)))
+                if (GUILayout.Button("▼", GUILayout.Width(26), GUILayout.Height(22)))
                 {
                     if (cfg.Priority < 99)
                     {
@@ -496,7 +509,7 @@ public class SmartCategorySortController : MonoBehaviour
                 if (cfg.IsLocked)
                 {
                     GUI.backgroundColor = new Color(0.95f, 0.35f, 0.35f);
-                    GUILayout.Label("⛔ ĐÃ KHÓA (Đóng băng 100%)", EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(24));
+                    GUILayout.Label("⛔ ĐÃ KHÓA (Không Nhận Đồ)", EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(24));
                 }
                 else if (cfg.IsAuto)
                 {
@@ -506,7 +519,7 @@ public class SmartCategorySortController : MonoBehaviour
                 }
                 else
                 {
-                    GUI.backgroundColor = new Color(0.3f, 0.85f, 0.45f);
+                    GUI.backgroundColor = new Color(0.22f, 0.75f, 0.42f);
                     string summary = GetSelectedTagsSummary(cfg.SelectedTags);
                     GUILayout.Label(summary, EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(24));
                 }
@@ -516,7 +529,7 @@ public class SmartCategorySortController : MonoBehaviour
 
                 // Nút mở chọn nhiều Tag
                 GUI.backgroundColor = new Color(0.95f, 0.8f, 0.25f);
-                if (GUILayout.Button("🎯 Chọn Tag (Multi) ▾", GUILayout.Width(155), GUILayout.Height(24)))
+                if (GUILayout.Button("🎯 Chọn Tag ▾", GUILayout.Width(135), GUILayout.Height(24)))
                 {
                     activeContainerIdForSelection = id;
                     activeContainerNameForSelection = ni.DisplayName;
@@ -524,7 +537,7 @@ public class SmartCategorySortController : MonoBehaviour
                 GUI.backgroundColor = Color.white;
 
                 // Nút nhanh: Tự động
-                if (GUILayout.Button("🤖 Auto", GUILayout.Width(65), GUILayout.Height(24)))
+                if (GUILayout.Button("🤖 Auto", GUILayout.Width(60), GUILayout.Height(24)))
                 {
                     cfg.IsAuto = true;
                     cfg.IsLocked = false;
@@ -535,7 +548,7 @@ public class SmartCategorySortController : MonoBehaviour
                 if (cfg.IsLocked)
                 {
                     GUI.backgroundColor = new Color(0.4f, 0.9f, 0.4f);
-                    if (GUILayout.Button("🔓 Mở", GUILayout.Width(65), GUILayout.Height(24)))
+                    if (GUILayout.Button("🔓 Mở", GUILayout.Width(60), GUILayout.Height(24)))
                     {
                         cfg.IsLocked = false;
                         SaveAssignments();
@@ -544,7 +557,7 @@ public class SmartCategorySortController : MonoBehaviour
                 else
                 {
                     GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
-                    if (GUILayout.Button("⛔ Khóa", GUILayout.Width(65), GUILayout.Height(24)))
+                    if (GUILayout.Button("⛔ Khóa", GUILayout.Width(60), GUILayout.Height(24)))
                     {
                         cfg.IsLocked = true;
                         SaveAssignments();
@@ -567,15 +580,15 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.BeginHorizontal();
 
         // Nút gom và phân loại tất cả
-        GUI.backgroundColor = new Color(0.2f, 0.9f, 0.4f);
-        if (GUILayout.Button("⚡ GOM & PHÂN LOẠI TOÀN BỘ (F3)", GUILayout.Height(36), GUILayout.Width(370)))
+        GUI.backgroundColor = new Color(0.2f, 0.85f, 0.4f);
+        if (GUILayout.Button("⚡ GOM & PHÂN LOẠI TOÀN BỘ (F3)", GUILayout.Height(36), GUILayout.Width(380)))
         {
             ExecuteCategorySort();
         }
         GUI.backgroundColor = Color.white;
 
         // Nút chỉ nén khít chặt
-        if (GUILayout.Button("🔄 Nén Khít Tất Cả (Xoay 90°)", GUILayout.Height(36), GUILayout.Width(260)))
+        if (GUILayout.Button("🔄 Nén Khít Tất Cả (Xoay 90°)", GUILayout.Height(36), GUILayout.Width(270)))
         {
             SortAllInventories();
         }
@@ -607,7 +620,13 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.BeginVertical("box");
         GUILayout.BeginHorizontal();
         GUI.color = new Color(1.0f, 0.9f, 0.3f);
-        GUILayout.Label("🎯 CẤU HÌNH NHẬN ĐỒ: " + activeContainerNameForSelection, EditorStyles_BoldLabel(), GUILayout.Width(500));
+        GUILayout.Label("🎯 CẤU HÌNH NHẬN ĐỒ: " + activeContainerNameForSelection, EditorStyles_BoldLabel(), GUILayout.Width(460));
+        GUI.color = Color.white;
+
+        // Badge đếm số tag đã chọn
+        int selCount = cfg.SelectedTags.Count;
+        GUI.color = (selCount > 0) ? new Color(0.4f, 1.0f, 0.5f) : new Color(0.85f, 0.85f, 0.85f);
+        GUILayout.Label($"[Đã chọn: {selCount} / {AllTags.Length} Tag]", EditorStyles_BoldLabel(), GUILayout.Width(170));
         GUI.color = Color.white;
 
         GUILayout.FlexibleSpace();
@@ -616,11 +635,11 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.color = new Color(1.0f, 0.85f, 0.2f);
         GUILayout.Label("⭐ Mức Ưu Tiên: " + cfg.Priority, EditorStyles_BoldLabel(), GUILayout.Width(110));
         GUI.color = Color.white;
-        if (GUILayout.Button("▲", GUILayout.Width(28), GUILayout.Height(22)))
+        if (GUILayout.Button("▲", GUILayout.Width(26), GUILayout.Height(22)))
         {
             if (cfg.Priority > 1) { cfg.Priority--; SaveAssignments(); }
         }
-        if (GUILayout.Button("▼", GUILayout.Width(28), GUILayout.Height(22)))
+        if (GUILayout.Button("▼", GUILayout.Width(26), GUILayout.Height(22)))
         {
             if (cfg.Priority < 99) { cfg.Priority++; SaveAssignments(); }
         }
@@ -636,8 +655,8 @@ public class SmartCategorySortController : MonoBehaviour
         // Các nút thao tác nhanh
         GUILayout.BeginHorizontal();
 
-        GUI.backgroundColor = new Color(0.3f, 0.85f, 0.45f);
-        if (GUILayout.Button("✅ Chọn Tất Cả (26 Tag)", GUILayout.Height(28)))
+        GUI.backgroundColor = new Color(0.28f, 0.8f, 0.45f);
+        if (GUILayout.Button($"✅ Chọn Tất Cả ({AllTags.Length} Tag)", GUILayout.Height(28)))
         {
             cfg.SelectedTags.Clear();
             foreach (var t in AllTags) cfg.SelectedTags.Add(t.TagId);
@@ -646,7 +665,7 @@ public class SmartCategorySortController : MonoBehaviour
             SaveAssignments();
         }
 
-        GUI.backgroundColor = new Color(0.95f, 0.4f, 0.4f);
+        GUI.backgroundColor = new Color(0.92f, 0.4f, 0.4f);
         if (GUILayout.Button("❌ Bỏ Chọn Hết", GUILayout.Height(28)))
         {
             cfg.SelectedTags.Clear();
@@ -654,7 +673,7 @@ public class SmartCategorySortController : MonoBehaviour
             SaveAssignments();
         }
 
-        GUI.backgroundColor = new Color(0.4f, 0.7f, 1.0f);
+        GUI.backgroundColor = new Color(0.35f, 0.65f, 0.95f);
         if (GUILayout.Button("🤖 Đặt Về Tự Động Theo Hòm", GUILayout.Height(28)))
         {
             cfg.IsAuto = true;
@@ -663,7 +682,7 @@ public class SmartCategorySortController : MonoBehaviour
             activeContainerIdForSelection = null;
         }
 
-        GUI.backgroundColor = new Color(0.8f, 0.3f, 0.3f);
+        GUI.backgroundColor = new Color(0.85f, 0.3f, 0.3f);
         if (GUILayout.Button("⛔ Đặt Khóa Hòm Này", GUILayout.Height(28)))
         {
             cfg.IsLocked = true;
@@ -676,24 +695,29 @@ public class SmartCategorySortController : MonoBehaviour
 
         GUILayout.Space(6);
 
-        // Danh sách dạng lưới 2 cột các Tag (26 Tag riêng biệt, hỗ trợ chọn nhiều tag)
-        selectorScrollPos = GUILayout.BeginScrollView(selectorScrollPos, GUILayout.Height(390));
+        // Danh sách dạng lưới 2 cột các Tag (20 Tag chuyên biệt xếp 2 cột + 1 Tag Kho Chung hàng ngang)
+        selectorScrollPos = GUILayout.BeginScrollView(selectorScrollPos, GUILayout.Height(400));
 
-        for (int i = 0; i < AllTags.Length; i += 2)
+        // 20 Tag đầu tiên (indexes 0..19): hiển thị 10 cặp
+        for (int i = 0; i < 20; i += 2)
         {
             GUILayout.BeginHorizontal();
-
-            // Cột 1
-            DrawTagToggleButton(AllTags[i], cfg);
-
-            // Cột 2
-            if (i + 1 < AllTags.Length)
+            DrawTagToggleButton(AllTags[i], cfg, 418f);
+            if (i + 1 < 20)
             {
-                DrawTagToggleButton(AllTags[i + 1], cfg);
+                DrawTagToggleButton(AllTags[i + 1], cfg, 418f);
             }
-
             GUILayout.EndHorizontal();
             GUILayout.Space(2);
+        }
+
+        // Tag thứ 21 (GENERAL - Kho Chung): Hiển thị nổi bật rộng toàn hàng
+        if (AllTags.Length > 20)
+        {
+            GUILayout.Space(2);
+            GUILayout.BeginHorizontal();
+            DrawTagToggleButton(AllTags[20], cfg, 842f);
+            GUILayout.EndHorizontal();
         }
 
         GUILayout.EndScrollView();
@@ -704,7 +728,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.2f, 0.85f, 0.45f);
-        if (GUILayout.Button("💾 XONG & LƯU CẤU HÌNH (⬅ Quay lại danh sách hòm)", GUILayout.Height(36), GUILayout.Width(500)))
+        if (GUILayout.Button("💾 XONG & LƯU CẤU HÌNH (⬅ Quay lại danh sách hòm)", GUILayout.Height(36), GUILayout.Width(540)))
         {
             SaveAssignments();
             activeContainerIdForSelection = null;
@@ -723,14 +747,14 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.EndHorizontal();
     }
 
-    private void DrawTagToggleButton(ItemTagDef tag, ContainerConfig cfg)
+    private void DrawTagToggleButton(ItemTagDef tag, ContainerConfig cfg, float width = 418f)
     {
         bool isSelected = cfg.SelectedTags.Contains(tag.TagId);
 
         if (isSelected)
         {
-            GUI.backgroundColor = new Color(0.25f, 0.85f, 0.4f);
-            if (GUILayout.Button("✔  " + tag.DisplayName, GUILayout.Height(30), GUILayout.Width(405)))
+            GUI.backgroundColor = new Color(0.2f, 0.78f, 0.42f);
+            if (GUILayout.Button("✔  " + tag.DisplayName, GUILayout.Height(32), GUILayout.Width(width)))
             {
                 cfg.SelectedTags.Remove(tag.TagId);
                 cfg.IsAuto = false;
@@ -740,8 +764,8 @@ public class SmartCategorySortController : MonoBehaviour
         }
         else
         {
-            GUI.backgroundColor = new Color(0.35f, 0.35f, 0.35f);
-            if (GUILayout.Button("    " + tag.DisplayName, GUILayout.Height(30), GUILayout.Width(405)))
+            GUI.backgroundColor = new Color(0.26f, 0.28f, 0.32f);
+            if (GUILayout.Button("    " + tag.DisplayName, GUILayout.Height(32), GUILayout.Width(width)))
             {
                 cfg.SelectedTags.Add(tag.TagId);
                 cfg.IsAuto = false;
@@ -1016,47 +1040,82 @@ public class SmartCategorySortController : MonoBehaviour
         }
 
         // 3. Nguồn chuẩn 3: Kiểm tra Tag chuẩn từ TagSystem qua item.IsTag(...)
-        if (item.IsTag("FIREARM") || item.IsTag("ADV_GUN_TAG") || item.IsTag("GUN_FRAME_TAG") || item.IsTag("SERVICE_GUN_TAG") || (item.IsTag("WEAPON") && !item.IsTag("MELEE_WEAPON"))) tags.Add("GUN");
-        if (item.IsTag("MELEE_WEAPON")) tags.Add("MELEE");
-        if (item.IsTag("AMMUNITION") || item.IsTag("MUNITION") || item.IsTag("AMMO_BOX_TAG") || item.IsTag("AMMO_TYPE_TAG") || item.IsTag("NORMAL_AMMO") || item.IsTag("ARMOR_PIERCING_AMMO") || item.IsTag("NON_LETHAL_AMMO")) tags.Add("AMMO");
-        if (item.IsTag("EXPLOSIVE")) tags.Add("EXPLOSIVE");
-        if (item.IsTag("GUN_MOD") || item.IsTag("WEAPON_MOD_TAG") || item.IsTag("GUN_CALIBER_TAG") || item.IsTag("GUN_SUPPRESSED_TAG")) tags.Add("ATTACHMENT");
-        if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("MEDICAL_TOOL") || item.IsTag("AUTONOMOUS_MEDICAL_SYSTEM_TAG")) tags.Add("MEDICAL");
-        if (item.IsTag("FOOD") || item.IsTag("PROCESSED_FOOD") || item.IsTag("TREAT") || item.IsTag("MEAT_FOOD_TAG") || item.IsTag("FRESH_FOOD_TAG") || item.IsTag("CANNED_FOOD_TAG") || item.IsTag("XENO_MEAT_TAG")) tags.Add("FOOD");
-        if (item.IsTag("WATER") || item.IsTag("WATER_RATION") || item.IsTag("BREVAGE") || item.IsTag("WATER_TANK_TAG")) tags.Add("DRINK");
-        if (item.IsTag("WATER_PURIFICATION_SUPPLY") || item.IsTag("WATER_PURIFICATION_TABLET") || item.IsTag("FILTER") || item.IsTag("WATER_FILTER") || item.IsTag("WATER_TESTING_STRIP_TAG")) tags.Add("WATER_FILTER");
-        if (item.IsTag("ALCOHOL") || item.IsTag("WINE_CONTAINER_TAG") || item.IsTag("RED_IMP_BEER_TAG") || item.IsTag("WINEMAKER")) tags.Add("ALCOHOL");
-        if (item.IsTag("CIGARETTE_TAG") || item.IsTag("ZHONGHUA")) tags.Add("TOBACCO");
-        if (item.IsTag("CONTRABAND") || item.IsTag("CONTRABAND_ITEM_TAG") || item.IsTag("RESTRICTED_1") || item.IsTag("RESTRICTED_2") || item.IsTag("RESTRICTED_3") || item.IsTag("TRAFFICKING") || item.IsTag("POISON")) tags.Add("CONTRABAND");
-        if (item.IsTag("NARCOTIC")) tags.Add("ADDICTIVE");
+        // Súng & Phụ kiện
+        if (item.IsTag("FIREARM") || item.IsTag("ADV_GUN_TAG") || item.IsTag("GUN_FRAME_TAG") || item.IsTag("SERVICE_GUN_TAG") || item.IsTag("GUN_MOD") || item.IsTag("WEAPON_MOD_TAG") || item.IsTag("GUN_CALIBER_TAG") || item.IsTag("GUN_SUPPRESSED_TAG") || (item.IsTag("WEAPON") && !item.IsTag("MELEE_WEAPON"))) tags.Add("GUN");
+
+        // Cận chiến
+        if (item.IsTag("MELEE_WEAPON") || item.IsTag("MELEE")) tags.Add("MELEE");
+
+        // Đạn dược & Thuốc nổ
+        if (item.IsTag("AMMUNITION") || item.IsTag("MUNITION") || item.IsTag("AMMO_BOX_TAG") || item.IsTag("AMMO_TYPE_TAG") || item.IsTag("NORMAL_AMMO") || item.IsTag("ARMOR_PIERCING_AMMO") || item.IsTag("NON_LETHAL_AMMO") || item.IsTag("EXPLOSIVE")) tags.Add("AMMO");
+
+        // Giáp & Bảo hộ
         if (item.IsTag("ARMOR") || item.IsTag("TACTICAL_EQUIPMENT_TAG") || item.IsTag("ARMORED")) tags.Add("ARMOR");
-        if (item.IsTag("MATERIAL") || item.IsTag("BASIC_MATERIAL") || item.IsTag("REFINED_MATERIAL") || item.IsTag("MATERIAL_TAG") || item.IsTag("CONSTRUCTION_MATERIAL_TAG") || item.IsTag("PRINTER_MATERIAL_TAG") || item.IsTag("SCRAP_METAL") || item.IsTag("ORE_TAG")) tags.Add("MATERIAL");
+
+        // Y tế
+        if (item.IsTag("MEDICAL") || item.IsTag("ITEM_MEDICAL_TAG") || item.IsTag("MEDICAL_TOOL") || item.IsTag("AUTONOMOUS_MEDICAL_SYSTEM_TAG")) tags.Add("MEDICAL");
+
+        // Hóa chất & Điều chế (MỚI THEO YÊU CẦU)
+        if (item.IsTag("CHEMICAL_PRODUCT_TAG") || item.IsTag("CHEMICAL_PRODUCT_PURITY_TAG") || item.IsTag("CHEMICAL_SUPPLIES") || item.IsTag("CHEM_ITEM_TAG") || item.IsTag("LIQUID_ACID") || item.IsTag("LIQUID_CHEMICAL_CONTAMINANT") || item.IsTag("LIQUID_CHLORINE") || item.IsTag("CATEGORY_CHEMICAL_PURITY") || item.IsTag("CHEMICAL_INTENT_TAG") || item.IsTag("CHEMICAL") || item.IsTag("CHEMIST") || item.IsTag("REAGENT") || item.IsTag("LIQUID_CONTAINER_DROPPER_TAG") || item.IsTag("LIQUID_CONTAINER_TAG") || item.IsTag("LIQUID_LUCK_TAG")) tags.Add("CHEMICAL");
+
+        // Thực phẩm
+        if (item.IsTag("FOOD") || item.IsTag("PROCESSED_FOOD") || item.IsTag("TREAT") || item.IsTag("MEAT_FOOD_TAG") || item.IsTag("FRESH_FOOD_TAG") || item.IsTag("CANNED_FOOD_TAG") || item.IsTag("XENO_MEAT_TAG")) tags.Add("FOOD");
+
+        // Nước uống & Lọc nước
+        if (item.IsTag("WATER") || item.IsTag("WATER_RATION") || item.IsTag("BREVAGE") || item.IsTag("WATER_TANK_TAG") || item.IsTag("WATER_PURIFICATION_SUPPLY") || item.IsTag("WATER_PURIFICATION_TABLET") || item.IsTag("FILTER") || item.IsTag("WATER_FILTER") || item.IsTag("WATER_TESTING_STRIP_TAG")) tags.Add("DRINK");
+
+        // Rượu bia & Thuốc lá
+        if (item.IsTag("ALCOHOL") || item.IsTag("WINE_CONTAINER_TAG") || item.IsTag("RED_IMP_BEER_TAG") || item.IsTag("WINEMAKER") || item.IsTag("CIGARETTE_TAG") || item.IsTag("ZHONGHUA")) tags.Add("ALCOHOL");
+
+        // Hàng cấm & Độc dược
+        if (item.IsTag("CONTRABAND") || item.IsTag("CONTRABAND_ITEM_TAG") || item.IsTag("RESTRICTED_1") || item.IsTag("RESTRICTED_2") || item.IsTag("RESTRICTED_3") || item.IsTag("TRAFFICKING") || item.IsTag("POISON")) tags.Add("CONTRABAND");
+
+        // Chất gây nghiện (Ma túy)
+        if (item.IsTag("NARCOTIC")) tags.Add("ADDICTIVE");
+
+        // Vật liệu chế tạo
+        if (item.IsTag("MATERIAL") || item.IsTag("BASIC_MATERIAL") || item.IsTag("REFINED_MATERIAL") || item.IsTag("MATERIAL_TAG") || item.IsTag("CONSTRUCTION_MATERIAL_TAG") || item.IsTag("PRINTER_MATERIAL_TAG") || item.IsTag("SCRAP_METAL") || item.IsTag("ORE_TAG") || item.IsTag("INGOT_PURITY_TAG")) tags.Add("MATERIAL");
+
+        // Dụng cụ
         if (item.IsTag("TOOL") || item.IsTag("TOOLBOX_ITEM_TAG") || item.IsTag("TOOLBOX_TAG") || item.IsTag("SALVAGE_TOOL_TAG") || item.IsTag("TECHNICAL_EQUIPMENT_TAG") || item.IsTag("MAGNIFYING_GLASS") || item.IsTag("LABELER")) tags.Add("TOOL");
-        if (item.IsTag("DOCUMENT") || item.IsTag("ACCESS_CARD") || item.IsTag("GUIDE_PAPER_TAG") || item.IsTag("NAV_DISK_TAG") || item.IsTag("TUTORIAL_PAPER_TAG") || item.IsTag("SLIP_DATA")) tags.Add("DOCUMENT");
-        if (item.IsTag("LOTTERY") || item.IsTag("LOTTERY_PAPER_TAG") || item.IsTag("SCRATCHER_TAG") || item.IsTag("SCRATCHER_NEW_TAG")) tags.Add("LOTTERY");
+
+        // Mô-đun & Pin năng lượng
+        if (item.IsTag("MODULE") || item.IsTag("MACHINE") || item.IsTag("SHIP_MODULE_TAG") || item.IsTag("PRINTER_MODULE") || item.IsTag("HYDROPONIC_MODULE") || item.IsTag("EVAPORATOR_MODULE") || item.IsTag("ALARM_MODULE") || item.IsTag("NODE") || item.IsTag("STANDARD_MACHINE_TAG") || item.IsTag("ENERGY_CELL") || item.IsTag("HYPERTECH_BATTERY_TAG")) tags.Add("MODULE");
+
+        // Tài liệu, Thẻ từ & Vé số
+        if (item.IsTag("DOCUMENT") || item.IsTag("ACCESS_CARD") || item.IsTag("GUIDE_PAPER_TAG") || item.IsTag("NAV_DISK_TAG") || item.IsTag("TUTORIAL_PAPER_TAG") || item.IsTag("SLIP_DATA") || item.IsTag("LOTTERY") || item.IsTag("LOTTERY_PAPER_TAG") || item.IsTag("SCRATCHER_TAG") || item.IsTag("SCRATCHER_NEW_TAG")) tags.Add("DOCUMENT");
+
+        // Nội tạng & Mẫu sinh học
         if (item.IsTag("ORGAN") || item.IsTag("ORGAN_ITEM_TAG") || item.IsTag("ORGANIC_ORGAN_TAG") || item.IsTag("HUMAN_ORGAN_TAG") || item.IsTag("HARVESTED_ORGAN_TAG") || item.IsTag("ORGAN_TRANSPORT_CONTAINER_TAG")) tags.Add("ORGAN");
-        if (item.IsTag("MODULE") || item.IsTag("MACHINE") || item.IsTag("SHIP_MODULE_TAG") || item.IsTag("PRINTER_MODULE") || item.IsTag("HYDROPONIC_MODULE") || item.IsTag("EVAPORATOR_MODULE") || item.IsTag("ALARM_MODULE") || item.IsTag("NODE") || item.IsTag("STANDARD_MACHINE_TAG")) tags.Add("MODULE");
-        if (item.IsTag("ENERGY_CELL") || item.IsTag("HYPERTECH_BATTERY_TAG")) tags.Add("ENERGY");
+
+        // Hạt giống & Cây trồng
         if (item.IsTag("SEED") || item.IsTag("SEED_ITEM_TAG") || item.IsTag("MODIFIED_SEED") || item.IsTag("FARMING_SUPPLIES")) tags.Add("SEED");
-        if (item.IsTag("HOUSEHOLD_GOOD") || item.IsTag("LUXURY_ITEM")) tags.Add("HOUSEHOLD");
-        if (item.IsTag("ART")) tags.Add("ART");
+
+        // Đồ gia dụng & Nghệ thuật
+        if (item.IsTag("HOUSEHOLD_GOOD") || item.IsTag("LUXURY_ITEM") || item.IsTag("ART")) tags.Add("HOUSEHOLD");
+
+        // Hòm, két chứa đồ
         if (item.IsTag("CONTAINER_TAG") || item.IsTag("SUPPLY_CRATE") || item.IsTag("STORAGE") || item.IsTag("SAFE_TAG") || item.IsTag("POUCH_TAG") || item.IsTag("STORABLE_PACKAGE_TAG") || item.IsTag("CAGE_TAG")) tags.Add("CONTAINER");
+
+        // Phế liệu
         if (item.IsTag("JUNK")) tags.Add("JUNK");
 
         // 4. Fallback chỉ kích hoạt khi item hoàn toàn không có tag hệ thống nào
         if (tags.Count == 0)
         {
             string id = (item.identifier ?? "").ToLowerInvariant();
-            if (id.Contains("pill") || id.Contains("bandage") || id.Contains("firstaid") || id.Contains("injector") || id.Contains("stim")) tags.Add("MEDICAL");
-            else if (id.Contains("water_filter") || id.Contains("purif") || id.Contains("water_tablet")) tags.Add("WATER_FILTER");
+            if (id.Contains("chem") || id.Contains("acid") || id.Contains("chlor") || id.Contains("purity") || id.Contains("reagent") || id.Contains("solvent")) tags.Add("CHEMICAL");
+            else if (id.Contains("pill") || id.Contains("bandage") || id.Contains("firstaid") || id.Contains("injector") || id.Contains("stim")) tags.Add("MEDICAL");
+            else if (id.Contains("water") || id.Contains("drink") || id.Contains("juice") || id.Contains("water_filter") || id.Contains("purif") || id.Contains("water_tablet") || id.Contains("filter")) tags.Add("DRINK");
             else if (id.Contains("food") || id.Contains("bread") || id.Contains("meat") || id.Contains("cheese") || id.Contains("snack") || id.Contains("nutrifruit")) tags.Add("FOOD");
-            else if (id.Contains("water") || id.Contains("drink") || id.Contains("juice")) tags.Add("DRINK");
-            else if (id.Contains("wine") || id.Contains("beer") || id.Contains("vodka") || id.Contains("alcohol")) tags.Add("ALCOHOL");
-            else if (id.Contains("cigar") || id.Contains("smoke") || id.Contains("tobacco") || id.Contains("cigarette")) tags.Add("TOBACCO");
+            else if (id.Contains("wine") || id.Contains("beer") || id.Contains("vodka") || id.Contains("alcohol") || id.Contains("cigar") || id.Contains("smoke") || id.Contains("tobacco") || id.Contains("cigarette")) tags.Add("ALCOHOL");
             else if (id.Contains("contraband") || id.Contains("fentanyl") || id.Contains("zyanide")) tags.Add("CONTRABAND");
-            else if (id.Contains("ammo") || id.Contains("bullet") || id.EndsWith("_mag")) tags.Add("AMMO");
-            else if (id.Contains("pistol") || id.Contains("rifle") || id.Contains("shotgun") || id.Contains("smg")) tags.Add("GUN");
+            else if (id.Contains("narcotic") || id.Contains("morphine")) tags.Add("ADDICTIVE");
+            else if (id.Contains("ammo") || id.Contains("bullet") || id.EndsWith("_mag") || id.Contains("explosive") || id.Contains("grenade") || id.Contains("c4") || id.Contains("mine")) tags.Add("AMMO");
+            else if (id.Contains("pistol") || id.Contains("rifle") || id.Contains("shotgun") || id.Contains("smg") || id.Contains("scope") || id.Contains("silencer")) tags.Add("GUN");
             else if (id.Contains("knife") || id.Contains("sword") || id.Contains("crowbar")) tags.Add("MELEE");
+            else if (id.Contains("module") || id.Contains("battery") || id.Contains("energy_cell")) tags.Add("MODULE");
+            else if (id.Contains("paper") || id.Contains("card") || id.Contains("document") || id.Contains("lottery") || id.Contains("ticket")) tags.Add("DOCUMENT");
         }
 
         if (tags.Count == 0) tags.Add("GENERAL");
@@ -1070,29 +1129,23 @@ public class SmartCategorySortController : MonoBehaviour
 
         // Khớp chuẩn xác 100% với danh mục hệ thống game
         if (t == "FOOD" || t == "FRESH_FOOD" || t == "PROCESSED_FOOD" || t == "TREAT") { tags.Add("FOOD"); return; }
-        if (t == "WATER" || t == "WATER_RATION" || t == "BREVAGE") { tags.Add("DRINK"); return; }
-        if (t == "FILTER" || t == "WATER_FILTER" || t == "WATER_PURIFICATION_SUPPLY" || t == "WATER_PURIFICATION_TABLET" || t == "WATER_TESTING_STRIP_TAG") { tags.Add("WATER_FILTER"); return; }
-        if (t == "ALCOHOL") { tags.Add("ALCOHOL"); return; }
-        if (t == "CIGARETTE_TAG" || t == "TOBACCO") { tags.Add("TOBACCO"); return; }
+        if (t == "WATER" || t == "WATER_RATION" || t == "BREVAGE" || t == "FILTER" || t == "WATER_FILTER" || t == "WATER_PURIFICATION_SUPPLY" || t == "WATER_PURIFICATION_TABLET" || t == "WATER_TESTING_STRIP_TAG") { tags.Add("DRINK"); return; }
+        if (t == "CHEMICAL" || t == "CHEM_ITEM_TAG" || t == "CHEMICAL_PRODUCT_TAG" || t == "CHEMICAL_PRODUCT_PURITY_TAG" || t == "CHEMICAL_SUPPLIES" || t == "LIQUID_ACID" || t == "LIQUID_CHLORINE" || t == "CATEGORY_CHEMICAL_PURITY" || t == "REAGENT" || t == "CHEMIST") { tags.Add("CHEMICAL"); return; }
+        if (t == "ALCOHOL" || t == "CIGARETTE_TAG" || t == "TOBACCO") { tags.Add("ALCOHOL"); return; }
         if (t == "CONTRABAND" || t == "RESTRICTED_1" || t == "RESTRICTED_2" || t == "RESTRICTED_3" || t == "POISON" || t == "TRAFFICKING") { tags.Add("CONTRABAND"); return; }
         if (t == "NARCOTIC" || t == "ADDICTIVE") { tags.Add("ADDICTIVE"); return; }
         if (t == "MEDICAL" || t == "MEDICAL_TOOL" || t == "ITEM_MEDICAL_TAG") { tags.Add("MEDICAL"); return; }
-        if (t == "FIREARM" || t == "MODDABLE" || (t == "WEAPON" && !tags.Contains("MELEE"))) { tags.Add("GUN"); return; }
+        if (t == "FIREARM" || t == "MODDABLE" || t == "GUN_MOD" || t == "ATTACHMENT" || (t == "WEAPON" && !tags.Contains("MELEE"))) { tags.Add("GUN"); return; }
         if (t == "MELEE_WEAPON" || t == "MELEE") { tags.Add("MELEE"); return; }
-        if (t == "AMMUNITION" || t == "MUNITION" || t == "AMMO") { tags.Add("AMMO"); return; }
-        if (t == "GUN_MOD" || t == "ATTACHMENT") { tags.Add("ATTACHMENT"); return; }
-        if (t == "EXPLOSIVE") { tags.Add("EXPLOSIVE"); return; }
+        if (t == "AMMUNITION" || t == "MUNITION" || t == "AMMO" || t == "EXPLOSIVE") { tags.Add("AMMO"); return; }
         if (t == "ARMOR") { tags.Add("ARMOR"); return; }
         if (t == "MATERIAL" || t == "BASIC_MATERIAL" || t == "REFINED_MATERIAL") { tags.Add("MATERIAL"); return; }
         if (t == "TOOL") { tags.Add("TOOL"); return; }
-        if (t == "DOCUMENT") { tags.Add("DOCUMENT"); return; }
-        if (t == "LOTTERY") { tags.Add("LOTTERY"); return; }
+        if (t == "DOCUMENT" || t == "LOTTERY") { tags.Add("DOCUMENT"); return; }
         if (t == "ORGAN") { tags.Add("ORGAN"); return; }
-        if (t == "MACHINE" || t == "MODULE" || t == "NODE" || t == "HYDROPONIC_MODULE" || t == "ALARM_MODULE" || t == "PRINTER_MODULE" || t == "EVAPORATOR_MODULE") { tags.Add("MODULE"); return; }
-        if (t == "ENERGY_CELL" || t == "ENERGY") { tags.Add("ENERGY"); return; }
+        if (t == "MACHINE" || t == "MODULE" || t == "NODE" || t == "HYDROPONIC_MODULE" || t == "ALARM_MODULE" || t == "PRINTER_MODULE" || t == "EVAPORATOR_MODULE" || t == "ENERGY_CELL" || t == "ENERGY") { tags.Add("MODULE"); return; }
         if (t == "SEED" || t == "MODIFIED_SEED" || t == "FARMING_SUPPLIES") { tags.Add("SEED"); return; }
-        if (t == "LUXURY_ITEM" || t == "HOUSEHOLD_GOOD") { tags.Add("HOUSEHOLD"); return; }
-        if (t == "ART") { tags.Add("ART"); return; }
+        if (t == "LUXURY_ITEM" || t == "HOUSEHOLD_GOOD" || t == "ART") { tags.Add("HOUSEHOLD"); return; }
         if (t == "CONTAINER" || t == "CONTAINER_TAG" || t == "STORAGE") { tags.Add("CONTAINER"); return; }
         if (t == "JUNK") { tags.Add("JUNK"); return; }
     }
@@ -1411,29 +1464,26 @@ public class SmartCategorySortController : MonoBehaviour
         string n = (name ?? "").ToLowerInvariant();
         string id = (item != null && item.identifier != null) ? item.identifier.ToLowerInvariant() : "";
 
-        if (n.Contains("súng") || n.Contains("vũ khí") || n.Contains("gun") || n.Contains("weapon") || n.Contains("firearm")) return "GUN";
-        if (n.Contains("đạn") || n.Contains("ammo") || n.Contains("bullet")) return "AMMO";
-        if (n.Contains("thuốc nổ") || n.Contains("lựu đạn") || n.Contains("c4") || n.Contains("bomb") || n.Contains("explosive")) return "EXPLOSIVE";
-        if (n.Contains("phụ kiện") || n.Contains("gun mod") || n.Contains("scope") || n.Contains("silencer")) return "ATTACHMENT";
-        if (n.Contains("thuốc lá") || n.Contains("xì gà") || n.Contains("cigar") || n.Contains("tobacco") || n.Contains("cigarette")) return "TOBACCO";
+        if (n.Contains("hóa chất") || n.Contains("hoá chất") || n.Contains("chemical") || n.Contains("chemist") || n.Contains("acid") || n.Contains("reagent") || id.Contains("chem")) return "CHEMICAL";
+        if (n.Contains("súng") || n.Contains("vũ khí") || n.Contains("gun") || n.Contains("weapon") || n.Contains("firearm") || n.Contains("phụ kiện") || n.Contains("gun mod") || n.Contains("scope") || n.Contains("silencer")) return "GUN";
+        if (n.Contains("cận chiến") || n.Contains("dao") || n.Contains("kiếm") || n.Contains("melee") || n.Contains("knife") || n.Contains("sword")) return "MELEE";
+        if (n.Contains("đạn") || n.Contains("ammo") || n.Contains("bullet") || n.Contains("thuốc nổ") || n.Contains("lựu đạn") || n.Contains("c4") || n.Contains("bomb") || n.Contains("explosive")) return "AMMO";
         if (n.Contains("y tế") || n.Contains("cứu thương") || n.Contains("med") || n.Contains("first aid") || (n.Contains("thuốc") && !n.Contains("thuốc lá") && !n.Contains("thuốc nổ"))) return "MEDICAL";
         if (n.Contains("thực phẩm") || n.Contains("đồ ăn") || n.Contains("bánh") || n.Contains("cơm") || n.Contains("food") || n.Contains("mì")) return "FOOD";
-        if (n.Contains("lọc nước") || n.Contains("purif") || n.Contains("water_filter") || id.Contains("water_tablet") || id.Contains("filter")) return "WATER_FILTER";
-        if (n.Contains("nước") || n.Contains("đồ uống") || n.Contains("water") || n.Contains("drink") || n.Contains("juice")) return "DRINK";
-        if (n.Contains("rượu") || n.Contains("bia") || n.Contains("alcohol") || n.Contains("wine") || n.Contains("beer") || n.Contains("vodka")) return "ALCOHOL";
-        if (n.Contains("hàng cấm") || n.Contains("giấu hàng") || n.Contains("contraband") || n.Contains("độc dược") || n.Contains("poison") || n.Contains("narcotic")) return "CONTRABAND";
+        if (n.Contains("nước") || n.Contains("đồ uống") || n.Contains("water") || n.Contains("drink") || n.Contains("juice") || n.Contains("lọc nước") || n.Contains("purif") || n.Contains("filter") || id.Contains("water_filter") || id.Contains("water_tablet")) return "DRINK";
+        if (n.Contains("rượu") || n.Contains("bia") || n.Contains("alcohol") || n.Contains("wine") || n.Contains("beer") || n.Contains("vodka") || n.Contains("thuốc lá") || n.Contains("xì gà") || n.Contains("cigar") || n.Contains("tobacco") || n.Contains("cigarette")) return "ALCOHOL";
+        if (n.Contains("ma túy") || n.Contains("narcotic") || n.Contains("chất gây nghiện") || n.Contains("addictive") || n.Contains("gây nghiện")) return "ADDICTIVE";
+        if (n.Contains("hàng cấm") || n.Contains("giấu hàng") || n.Contains("contraband") || n.Contains("độc dược") || n.Contains("poison") || n.Contains("hàng lậu")) return "CONTRABAND";
         if (n.Contains("giáp") || n.Contains("mũ") || n.Contains("armor") || n.Contains("vest") || n.Contains("helmet")) return "ARMOR";
         if (n.Contains("vật liệu") || n.Contains("kim loại") || n.Contains("quặng") || n.Contains("material") || n.Contains("metal")) return "MATERIAL";
-        if (n.Contains("công cụ") || n.Contains("dụng cụ") || n.Contains("kỹ thuật") || n.Contains("tool")) return "TOOL";
-        if (n.Contains("tài liệu") || n.Contains("thẻ") || n.Contains("giấy") || n.Contains("document") || n.Contains("card")) return "DOCUMENT";
-        if (n.Contains("vé số") || n.Contains("vé cào") || n.Contains("lottery") || n.Contains("scratcher")) return "LOTTERY";
+        if (n.Contains("công cụ") || n.Contains("dụng cụ") || n.Contains("kỹ thuật") || n.Contains("tool") || n.Contains("sửa chữa")) return "TOOL";
+        if (n.Contains("tài liệu") || n.Contains("thẻ") || n.Contains("giấy") || n.Contains("document") || n.Contains("card") || n.Contains("vé số") || n.Contains("vé cào") || n.Contains("lottery") || n.Contains("scratcher")) return "DOCUMENT";
         if (n.Contains("nội tạng") || n.Contains("sinh học") || n.Contains("organ")) return "ORGAN";
-        if (n.Contains("mô-đun") || n.Contains("module") || n.Contains("chip") || id.Contains("module")) return "MODULE";
-        if (n.Contains("pin") || n.Contains("năng lượng") || n.Contains("battery") || n.Contains("power")) return "ENERGY";
+        if (n.Contains("mô-đun") || n.Contains("module") || n.Contains("chip") || id.Contains("module") || n.Contains("pin") || n.Contains("năng lượng") || n.Contains("battery") || n.Contains("power")) return "MODULE";
         if (n.Contains("hạt giống") || n.Contains("nông") || n.Contains("seed") || id.Contains("seed")) return "SEED";
-        if (n.Contains("gia dụng") || n.Contains("tiện ích") || n.Contains("luxury")) return "HOUSEHOLD";
-        if (n.Contains("nghệ thuật") || n.Contains("art")) return "ART";
-        if (n.Contains("hòm") || n.Contains("thùng") || n.Contains("crate") || n.Contains("box")) return "CONTAINER";
+        if (n.Contains("gia dụng") || n.Contains("tiện ích") || n.Contains("luxury") || n.Contains("nghệ thuật") || n.Contains("art")) return "HOUSEHOLD";
+        if (n.Contains("hòm") || n.Contains("thùng") || n.Contains("crate") || n.Contains("box") || n.Contains("két") || n.Contains("túi")) return "CONTAINER";
+        if (n.Contains("phế liệu") || n.Contains("rác") || n.Contains("junk") || n.Contains("trash")) return "JUNK";
 
         return "GENERAL";
     }
@@ -1602,6 +1652,15 @@ public class SmartCategorySortController : MonoBehaviour
     {
         if (string.IsNullOrEmpty(containerId)) return new ContainerConfig();
 
+        // Chuẩn hóa tag mặc định nếu rơi vào nhóm cũ đã gộp
+        if (defaultTagId == "ATTACHMENT") defaultTagId = "GUN";
+        else if (defaultTagId == "EXPLOSIVE") defaultTagId = "AMMO";
+        else if (defaultTagId == "WATER_FILTER") defaultTagId = "DRINK";
+        else if (defaultTagId == "TOBACCO") defaultTagId = "ALCOHOL";
+        else if (defaultTagId == "LOTTERY") defaultTagId = "DOCUMENT";
+        else if (defaultTagId == "ENERGY") defaultTagId = "MODULE";
+        else if (defaultTagId == "ART") defaultTagId = "HOUSEHOLD";
+
         ContainerConfig cfg;
         if (!containerConfigs.TryGetValue(containerId, out cfg))
         {
@@ -1680,6 +1739,14 @@ public class SmartCategorySortController : MonoBehaviour
     private static string GetTagDisplayName(string tagId)
     {
         if (string.IsNullOrEmpty(tagId)) return "Kho Chung";
+        if (tagId == "ATTACHMENT") tagId = "GUN";
+        else if (tagId == "EXPLOSIVE") tagId = "AMMO";
+        else if (tagId == "WATER_FILTER") tagId = "DRINK";
+        else if (tagId == "TOBACCO") tagId = "ALCOHOL";
+        else if (tagId == "LOTTERY") tagId = "DOCUMENT";
+        else if (tagId == "ENERGY") tagId = "MODULE";
+        else if (tagId == "ART") tagId = "HOUSEHOLD";
+
         foreach (var t in AllTags)
         {
             if (t.TagId == tagId) return t.DisplayName;
