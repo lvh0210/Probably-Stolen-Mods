@@ -133,3 +133,9 @@
   - [x] 25.3: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.6.4) và triển khai vào thư mục game `D:\GameCrack\Probably Stolen\Mods\SmartInventorySort\`.
   - [x] 25.4: Kiểm thử và xác thực cơ chế phân loại vũ khí/đồ cấm đã có giấy phép (Sentinel Mk. III đi thẳng vào hòm súng).
   - [x] 25.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.
+- [x] **Chặng 26: Đại Tu Toàn Diện Giao Diện F2: Trực Quan Hóa Đa Sắc, Phân Cấp Thẻ Hòm & Ưu Tiên Hòm Đang Mở (v1.7.0)**
+  - [x] 26.1: Cấu trúc hóa metadata `NamedInventory`: bổ sung `IsOpen`, `LocationName`, `RawName`, `ShortUid`, `TabIndex`, `TotalTabs` để tách biệt thuộc tính.
+  - [x] 26.2: Triển khai thuật toán sắp xếp danh sách hòm hiển thị: Đưa hòm ĐANG MỞ lên đỉnh đầu tiên (`IsOpen == true`), tiếp theo đến mức độ ưu tiên (`Priority 1..99`), rồi đến vị trí trong kho (`LocationName`) và phân loại hòm riêng.
+  - [x] 26.3: Thiết kế lại toàn bộ Card UI với bảng màu đa sắc trực quan (Rich Text): nhãn `[🔓 ĐANG MỞ]` màu Neon Green/Emerald bắt mắt kèm đổi màu nền card; nhãn vị trí `[📍 Kho: ...]`, mức ưu tiên `⭐ Ưu Tiên X`, badge trạng thái và nút điều khiển rõ ràng.
+  - [x] 26.4: Cập nhật `manifest.xml`, biên dịch `SmartInventorySort.dll` (v1.7.0) và triển khai vào thư mục game.
+  - [x] 26.5: Cập nhật tài liệu `CHECKPOINT.md` và đồng bộ mã nguồn lên GitHub.

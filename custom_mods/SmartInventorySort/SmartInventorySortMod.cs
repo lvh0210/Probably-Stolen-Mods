@@ -8,18 +8,19 @@ using UnityEngine.EventSystems;
 using HarmonyLib;
 
 // =========================================================================
-// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.6.4)
+// SMART INVENTORY SORT & MULTI-TAG CATEGORY STORAGE MOD (v1.7.0)
 // Tác giả: Antigravity AI (VibeCode)
-// Tính năng nâng cấp cốt lõi v1.6.4:
-// 1. TÁCH BIỆT HOÀN TOÀN HẠNG CẤM (RESTRICTED_1/2/3) KHỎI HÀNG CẤM (CONTRABAND):
-//    - Không tự động gán tag CONTRABAND cho các hạng cấm RESTRICTED_1/2/3 trong GetItemTagIds và AddMatchingTagIds.
-//    - Tích hợp PermitHelper.HavePermit(item) vào Master Isolation Shield: Tự động loại bỏ tag CONTRABAND nếu người chơi đã sở hữu giấy phép hợp pháp.
-//    - Đảm bảo vũ khí (Sentinel Mk. III...), vật tư y tế, hóa chất khi đã mua giấy phép hợp pháp sẽ đi thẳng vào hòm chuyên biệt tương ứng (Súng, Y Tế, Hóa Chất), không bao giờ bị ném nhầm vào Hòm Hàng Cấm.
-// 2. KẾ THỪA TOÀN BỘ TÍNH NĂNG V1.6.3:
-//    - Bảo toàn ID bền vững cho hòm đang mở, quét container kho tiệm trước tiên.
-//    - Loại bỏ STORABLE_PACKAGE_TAG khỏi CONTAINER, Master Isolation Shield cho SEED/FOOD/MEDICAL/DRINK.
-//    - Nhận diện toàn bộ Tab hòm nâng cấp (MachineryTabs), quét đệ quy hòm lồng hòm (FindAllChildItems).
-//    - Giao diện 2 cột cân xứng 418px + Kho Chung toàn màn hình, 21 tag phân loại trực quan.
+// Tính năng nâng cấp cốt lõi v1.7.0:
+// 1. ĐẠI TU TOÀN DIỆN GIAO DIỆN F2: TRỰC QUAN HÓA ĐA SẮC & PHÂN CẤP THUỘC TÍNH:
+//    - Tích hợp Rich Text toàn diện: Màu sắc phân biệt rõ ràng cho từng thuộc tính (Tên hòm, Vị trí kho, Mức ưu tiên, Dung lượng, ID, Chế độ nhận đồ).
+//    - Hòm ĐANG MỞ tự động ưu tiên xếp lên ĐẦU TIÊN với nhãn [🔓 ĐANG MỞ] màu Neon Green/Emerald phát sáng, đổi màu nền card xanh ngọc nổi bật.
+//    - Sắp xếp thứ tự hòm khoa học: Đang mở (IsOpen) -> Mức ưu tiên (Priority 1..99) -> Vị trí kho (LocationName: Kho Chính, Hòm Sau, Quầy Thu Ngân...) -> Tên hòm.
+//    - Nhãn Vị Trí Kho [📍 Kho: ...] màu Cyan ngọc bích giúp nhận biết ngay hòm đang nằm trong khu vực nào của tiệm.
+//    - Bảng chọn Tag (Trang 2) rực rỡ với màu sắc chủ đạo riêng biệt cho từng nhóm vật phẩm (Súng: Cam, Y tế: Hồng, Hóa chất: Tím, Hàng cấm: Đỏ tươi, Nông sản: Xanh lá...).
+// 2. KẾ THỪA TOÀN BỘ NỀN TẢNG ỔN ĐỊNH V1.6.4:
+//    - Tách biệt hoàn toàn hạng cấm RESTRICTED khỏi tag CONTRABAND, bảo vệ vật phẩm đã có giấy phép.
+//    - Bảo toàn ID bền vững cho hòm đang mở, loại bỏ hoàn toàn STORABLE_PACKAGE_TAG khỏi CONTAINER.
+//    - Master Isolation Shield cho SEED/FOOD/MEDICAL/DRINK, quét đệ quy hòm lồng hòm (FindAllChildItems).
 // =========================================================================
 
 public class SmartInventorySortMod : IMod
@@ -39,7 +40,7 @@ public class SmartInventorySortMod : IMod
             {
                 harmony = new Harmony("com.antigravity.smartinventorysort");
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.6.4 (Hỗ trợ hệ thống Giấy phép cuối game, phân định RESTRICTED vs CONTRABAND).");
+                Debug.Log("[SmartInventorySort] Đã kích hoạt v1.7.0 (Đại tu giao diện F2 đa sắc, ưu tiên hòm đang mở & trực quan hóa vị trí kho).");
             }
 
             if (uiObject == null)
@@ -47,7 +48,7 @@ public class SmartInventorySortMod : IMod
                 uiObject = new GameObject("SmartCategorySortUI");
                 uiObject.AddComponent<SmartCategorySortController>();
                 UnityEngine.Object.DontDestroyOnLoad(uiObject);
-                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.6.4.");
+                Debug.Log("[SmartInventorySort] Đã khởi tạo Controller Giao Diện Menu F2 v1.7.0.");
             }
         }
         catch (Exception ex)
@@ -283,6 +284,12 @@ public class NamedInventory
 {
     public string Id;
     public string DisplayName;
+    public string RawName;
+    public string LocationName;
+    public bool IsOpen;
+    public int ShortUid;
+    public int TabIndex;
+    public int TotalTabs;
     public GameGridInventory Inventory;
     public string DefaultTagId;
     public bool HasId;
@@ -298,7 +305,7 @@ public class SmartCategorySortController : MonoBehaviour
 
     private bool showMenu = false;
     private bool showAllStorages = false;
-    public Rect windowRect = new Rect(50, 30, 880, 640);
+    public Rect windowRect = new Rect(50, 30, 920, 670);
     private Vector2 scrollPos;
     private Vector2 selectorScrollPos;
     private string statusMessage = "Bấm F2 để ẩn/hiện menu. Bấm F3 để gom và phân loại toàn bộ kho.";
@@ -335,6 +342,36 @@ public class SmartCategorySortController : MonoBehaviour
         new ItemTagDef("GENERAL", "📦 Kho Chung (Mọi Đồ Khác)", "Kho Chung")
     };
 
+    // Bảng màu phân biệt trực quan cho 21 danh mục Tag
+    public static Color GetTagColor(string tagId)
+    {
+        switch (tagId)
+        {
+            case "GUN": return new Color(0.95f, 0.60f, 0.20f);       // Cam rực rỡ
+            case "MELEE": return new Color(0.95f, 0.75f, 0.35f);     // Vàng hổ phách
+            case "AMMO": return new Color(0.92f, 0.30f, 0.25f);      // Đỏ đạn lửa
+            case "ARMOR": return new Color(0.30f, 0.65f, 0.90f);     // Xanh thép
+            case "MEDICAL": return new Color(0.92f, 0.35f, 0.60f);   // Hồng cánh sen
+            case "CHEMICAL": return new Color(0.70f, 0.40f, 0.90f);  // Tím hóa học
+            case "FOOD": return new Color(0.95f, 0.70f, 0.30f);      // Vàng mật ong
+            case "DRINK": return new Color(0.20f, 0.75f, 0.85f);     // Xanh ngọc biển
+            case "ALCOHOL": return new Color(0.65f, 0.45f, 0.40f);   // Nâu gỗ / Vang đỏ
+            case "ADDICTIVE": return new Color(0.85f, 0.30f, 0.90f); // Tím neon
+            case "CONTRABAND": return new Color(0.95f, 0.15f, 0.25f);// Đỏ tươi nguy hiểm
+            case "MATERIAL": return new Color(0.60f, 0.70f, 0.75f);  // Xám kim loại
+            case "TOOL": return new Color(0.95f, 0.85f, 0.30f);      // Vàng thợ sửa
+            case "MODULE": return new Color(0.20f, 0.75f, 0.65f);    // Xanh lục điện
+            case "DOCUMENT": return new Color(0.85f, 0.90f, 0.50f);  // Vàng giấy chanh
+            case "ORGAN": return new Color(0.95f, 0.45f, 0.35f);     // Đỏ cam sinh học
+            case "SEED": return new Color(0.35f, 0.80f, 0.40f);      // Xanh mầm lá
+            case "HOUSEHOLD": return new Color(0.75f, 0.60f, 0.85f); // Tím oải hương
+            case "CONTAINER": return new Color(0.35f, 0.75f, 0.95f); // Lam da trời
+            case "JUNK": return new Color(0.50f, 0.55f, 0.60f);      // Xám phế liệu
+            case "GENERAL": return new Color(0.15f, 0.85f, 0.55f);   // Xanh bạc hà
+            default: return new Color(0.70f, 0.70f, 0.70f);
+        }
+    }
+
     private Dictionary<string, ContainerConfig> containerConfigs = new Dictionary<string, ContainerConfig>();
 
     private void Awake()
@@ -359,7 +396,17 @@ public class SmartCategorySortController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F2))
         {
             showMenu = !showMenu;
-            if (!showMenu) activeContainerIdForSelection = null;
+            if (showMenu)
+            {
+                // Canh giữa màn hình tự động khi mở
+                float winW = 920f;
+                float winH = 670f;
+                windowRect = new Rect(Mathf.Max(10f, (Screen.width - winW) / 2f), Mathf.Max(10f, (Screen.height - winH) / 2f), winW, winH);
+            }
+            else
+            {
+                activeContainerIdForSelection = null;
+            }
         }
 
         // F3: Phím Tắt Nhanh - Gom & Phân Loại Tất Cả Theo Ưu Tiên
@@ -374,9 +421,12 @@ public class SmartCategorySortController : MonoBehaviour
         if (!showMenu) return;
 
         GUI.skin.window.fontSize = 14;
+        GUI.skin.label.richText = true;
+        GUI.skin.box.richText = true;
+        GUI.skin.button.richText = true;
 
         // VẼ 1 CỬA SỔ DUY NHẤT (Chống đè cửa sổ, chống kéo ra kéo vào)
-        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.6.4)");
+        windowRect = GUI.Window(889911, windowRect, DrawMainWindow, "📦 BẢNG ĐIỀU KHIỂN & PHÂN LOẠI HÒM ĐỒ (SMART INVENTORY v1.7.0)");
     }
 
     private void DrawMainWindow(int windowId)
@@ -398,7 +448,7 @@ public class SmartCategorySortController : MonoBehaviour
             DrawMainContainerListPage();
         }
 
-        GUI.DragWindow(new Rect(0, 0, 880, 28));
+        GUI.DragWindow(new Rect(0, 0, windowRect.width, 28));
     }
 
     // =========================================================================
@@ -408,38 +458,70 @@ public class SmartCategorySortController : MonoBehaviour
     {
         GUILayout.Space(6);
 
+        List<NamedInventory> allInventories = GetAvailableInventories();
+        List<NamedInventory> displayInventories = new List<NamedInventory>();
+
+        int openCount = 0;
+        foreach (var ni in allInventories)
+        {
+            if (ni.HasId || showAllStorages)
+            {
+                ni.Config = GetConfig(ni.Id, ni.DefaultTagId, ni.HasId);
+                if (ni.IsOpen) openCount++;
+                displayInventories.Add(ni);
+            }
+        }
+
+        // SẮP XẾP DANH SÁCH HÒM HIỂN THỊ THEO YÊU CẦU:
+        // 1. Hòm ĐANG MỞ (IsOpen == true) xếp lên ĐẦU TIÊN
+        // 2. Mức độ ưu tiên (Priority 1..99, 1 là cao nhất)
+        // 3. Có đang ở trong kho nào không: Hòm riêng (HasId) xếp trước Kho nền tiệm, sắp xếp theo Vị trí kho (LocationName)
+        // 4. Sắp xếp theo tên hòm
+        // 5. Id ổn định
+        displayInventories.Sort((a, b) =>
+        {
+            // 1. Đang mở lên đầu tiên
+            if (a.IsOpen != b.IsOpen) return a.IsOpen ? -1 : 1;
+
+            // 2. Mức ưu tiên (1 cao nhất)
+            int cmpP = a.Config.Priority.CompareTo(b.Config.Priority);
+            if (cmpP != 0) return cmpP;
+
+            // 3. Hòm riêng xếp trước kho nền tiệm
+            if (a.HasId != b.HasId) return a.HasId ? -1 : 1;
+
+            // 4. Vị trí trong kho (LocationName)
+            int cmpLoc = string.Compare(a.LocationName ?? "", b.LocationName ?? "", StringComparison.OrdinalIgnoreCase);
+            if (cmpLoc != 0) return cmpLoc;
+
+            // 5. Tên hòm
+            int cmpName = string.Compare(a.RawName ?? a.DisplayName ?? "", b.RawName ?? b.DisplayName ?? "", StringComparison.OrdinalIgnoreCase);
+            if (cmpName != 0) return cmpName;
+
+            return string.Compare(a.Id, b.Id, StringComparison.Ordinal);
+        });
+
         // Thanh trạng thái & hướng dẫn nhanh
         GUILayout.BeginHorizontal("box");
-        GUI.color = new Color(1.0f, 0.9f, 0.3f);
-        GUILayout.Label("💡 " + statusMessage, GUILayout.Height(22));
+        GUI.color = new Color(1.0f, 0.95f, 0.4f);
+        string openBadgeText = openCount > 0 ? $"<color=#00FFA3><b>🔓 {openCount} Hòm Đang Mở (Trên Cùng)</b></color>  |  " : "";
+        GUILayout.Label($"💡 {openBadgeText}Tổng cộng <b>{displayInventories.Count}</b> hòm khả dụng  |  F3 để gom phân loại toàn bộ", EditorStyles_BoldLabel(), GUILayout.Height(24));
         GUI.color = Color.white;
         GUILayout.FlexibleSpace();
-        showAllStorages = GUILayout.Toggle(showAllStorages, " Hiện cả kho phụ nền tiệm");
+        showAllStorages = GUILayout.Toggle(showAllStorages, " Hiện cả kho nền tiệm");
         GUILayout.EndHorizontal();
 
         GUILayout.Space(4);
 
         // Header ghi chú
         GUILayout.BeginHorizontal();
-        GUI.color = new Color(0.7f, 0.9f, 1.0f);
-        GUILayout.Label("Danh Sách Hòm Chứa: Thiết lập mức Ưu Tiên (1 là cao nhất) và bấm [🎯 Chọn Tag ▾] để chọn loại vật phẩm hòm nhận.");
+        GUI.color = new Color(0.75f, 0.92f, 1.0f);
+        GUILayout.Label("Danh Sách Hòm Chứa: Bấm [🎯 Chọn Tag ▾] để chọn vật phẩm hòm nhận. Hòm mở trên bàn sẽ luôn tự động xếp lên đầu!");
         GUI.color = Color.white;
         GUILayout.EndHorizontal();
 
-        List<NamedInventory> allInventories = GetAvailableInventories();
-        List<NamedInventory> displayInventories = new List<NamedInventory>();
-
-        foreach (var ni in allInventories)
-        {
-            if (ni.HasId || showAllStorages)
-            {
-                ni.Config = GetConfig(ni.Id, ni.DefaultTagId, ni.HasId);
-                displayInventories.Add(ni);
-            }
-        }
-
         // Vùng cuộn danh sách hòm
-        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(450));
+        scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(470));
 
         if (displayInventories.Count == 0)
         {
@@ -457,91 +539,144 @@ public class SmartCategorySortController : MonoBehaviour
                 string id = ni.Id;
                 var cfg = ni.Config;
 
-                // Vẽ từng Hòm đồ dưới dạng CARD riêng biệt
-                GUILayout.BeginVertical("box");
+                // ĐỔI MÀU NỀN CARD RIÊNG BIỆT DỰA THEO TRẠNG THÁI:
+                // - Đang mở: Nền Xanh Lục Neon / Ngọc lục bảo phát sáng
+                // - Đã khóa: Nền Nâu Đỏ cảnh báo
+                // - Bình thường: Nền Xám Lam thanh lịch
+                if (ni.IsOpen)
+                {
+                    GUI.backgroundColor = new Color(0.10f, 0.42f, 0.32f, 0.95f); // Neon Emerald Teal
+                }
+                else if (cfg.IsLocked)
+                {
+                    GUI.backgroundColor = new Color(0.38f, 0.18f, 0.18f, 0.85f); // Dark Wine Maroon
+                }
+                else
+                {
+                    GUI.backgroundColor = new Color(0.18f, 0.22f, 0.28f, 0.85f); // Slate Navy
+                }
 
-                // Dòng 1: Tên hòm, vị trí, kích thước và số món
+                GUILayout.BeginVertical("box");
+                GUI.backgroundColor = Color.white; // Reset background color for children
+
+                // ==========================================
+                // DÒNG 1: THUỘC TÍNH ĐỊNH DANH & TRẠNG THÁI
+                // ==========================================
                 GUILayout.BeginHorizontal();
-                GUI.color = new Color(1.0f, 0.95f, 0.7f);
-                GUILayout.Label(ni.DisplayName, EditorStyles_BoldLabel(), GUILayout.Width(500));
-                GUI.color = Color.white;
+
+                // 1. Nhãn ĐANG MỞ nổi bật (Nếu đang mở: Neon Lime sáng chói; nếu đóng: icon màu xám)
+                if (ni.IsOpen)
+                {
+                    GUI.backgroundColor = new Color(0.0f, 0.85f, 0.45f);
+                    GUILayout.Label("<color=#00FFA3><b>🔓 ĐANG MỞ</b></color>", EditorStyles_BadgeBox(), GUILayout.Width(105), GUILayout.Height(24));
+                    GUI.backgroundColor = Color.white;
+                }
+                else
+                {
+                    GUILayout.Label("<color=#90A4AE>💼 Đóng</color>", EditorStyles_Label(), GUILayout.Width(65), GUILayout.Height(24));
+                }
+
+                // 2. Tên hòm chính (Màu Trắng Sáng nổi bật)
+                string cleanRawName = !string.IsNullOrEmpty(ni.RawName) ? ni.RawName : ni.DisplayName;
+                GUILayout.Label($"<color=#FFFFFF><b>{cleanRawName}</b></color>", EditorStyles_BoldLabel(), GUILayout.Width(230), GUILayout.Height(24));
+
+                // 3. Tab nếu có (Màu Vàng nghệ)
+                if (ni.TotalTabs > 1)
+                {
+                    GUILayout.Label($"<color=#FFD54F><b>[Tab {ni.TabIndex}/{ni.TotalTabs}]</b></color>", EditorStyles_BoldLabel(), GUILayout.Width(80), GUILayout.Height(24));
+                }
+
+                // 4. Mã UID (Màu Tím Lavender)
+                if (ni.ShortUid > 0)
+                {
+                    GUILayout.Label($"<color=#CE93D8>#{ni.ShortUid}</color>", EditorStyles_Label(), GUILayout.Width(65), GUILayout.Height(24));
+                }
+
+                // 5. Vị trí trong kho (Location - "Có đang ở trong kho nào không" - Màu Cyan Sáng / Ngọc Bích)
+                if (!string.IsNullOrEmpty(ni.LocationName))
+                {
+                    GUI.backgroundColor = new Color(0.15f, 0.35f, 0.50f);
+                    GUILayout.Label($"<color=#4DD0E1><b>📍 {ni.LocationName}</b></color>", EditorStyles_BadgeBox(), GUILayout.Width(170), GUILayout.Height(24));
+                    GUI.backgroundColor = Color.white;
+                }
+
                 GUILayout.FlexibleSpace();
-                GUI.color = new Color(0.6f, 0.85f, 1.0f);
-                GUILayout.Label("[" + count + " món | " + ni.Inventory.inventoryShape.width + "x" + ni.Inventory.inventoryShape.height + "]", GUILayout.Width(130));
-                GUI.color = Color.white;
+
+                // 6. Số lượng món đồ & Kích thước (Màu Xanh Biển Nhạt)
+                string shapeText = $"{ni.Inventory.inventoryShape.width}x{ni.Inventory.inventoryShape.height}";
+                string countColor = (count > 0) ? "#81D4FA" : "#78909C";
+                GUILayout.Label($"<color={countColor}>📦 {count} món ({shapeText})</color>", EditorStyles_Label(), GUILayout.Width(130), GUILayout.Height(24));
+
                 GUILayout.EndHorizontal();
 
-                // Dòng 2: Bộ chọn Ưu Tiên + Badge Trạng Thái / Danh Sách Tag + Nút Điều Khiển
+                GUILayout.Space(2);
+
+                // ==========================================
+                // DÒNG 2: BỘ CHỌN ƯU TIÊN + BADGE TAG + NÚT THAO TÁC
+                // ==========================================
                 GUILayout.BeginHorizontal();
 
-                // Bộ chỉnh Ưu Tiên (Priority Selector)
-                GUI.color = new Color(1.0f, 0.85f, 0.2f);
-                GUILayout.Label("⭐ Ưu Tiên: " + cfg.Priority, EditorStyles_BoldLabel(), GUILayout.Width(95), GUILayout.Height(24));
-                GUI.color = Color.white;
+                // Bộ chỉnh Ưu Tiên (Priority Selector) - Màu sắc thay đổi theo mức độ ưu tiên
+                string prioColor = (cfg.Priority == 1) ? "#FFD700" : (cfg.Priority <= 3) ? "#FFB74D" : (cfg.Priority <= 10) ? "#FFF59D" : "#B0BEC5";
+                GUILayout.Label($"<color={prioColor}><b>⭐ Ưu Tiên: {cfg.Priority}</b></color>", EditorStyles_BoldLabel(), GUILayout.Width(105), GUILayout.Height(26));
 
-                if (GUILayout.Button("▲", GUILayout.Width(26), GUILayout.Height(22)))
+                if (GUILayout.Button("▲", GUILayout.Width(26), GUILayout.Height(24)))
                 {
-                    if (cfg.Priority > 1)
-                    {
-                        cfg.Priority--;
-                        SaveAssignments();
-                    }
+                    if (cfg.Priority > 1) { cfg.Priority--; SaveAssignments(); }
                 }
-                if (GUILayout.Button("▼", GUILayout.Width(26), GUILayout.Height(22)))
+                if (GUILayout.Button("▼", GUILayout.Width(26), GUILayout.Height(24)))
                 {
-                    if (cfg.Priority < 99)
-                    {
-                        cfg.Priority++;
-                        SaveAssignments();
-                    }
+                    if (cfg.Priority < 99) { cfg.Priority++; SaveAssignments(); }
                 }
 
-                GUILayout.Space(8);
+                GUILayout.Space(6);
 
-                // Badge trạng thái & các tag đã chọn
+                // Badge trạng thái & các tag đã chọn với màu sắc riêng biệt
                 if (cfg.IsLocked)
                 {
-                    GUI.backgroundColor = new Color(0.95f, 0.35f, 0.35f);
-                    GUILayout.Label("⛔ ĐÃ KHÓA (Không Nhận Đồ)", EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(24));
+                    GUI.backgroundColor = new Color(0.85f, 0.25f, 0.25f);
+                    GUILayout.Label("<color=#FFFFFF><b>⛔ ĐÃ KHÓA (Không Nhận Đồ)</b></color>", EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(26));
                 }
                 else if (cfg.IsAuto)
                 {
                     string defTagName = GetTagDisplayName(ni.DefaultTagId);
-                    GUI.backgroundColor = new Color(0.35f, 0.65f, 0.95f);
-                    GUILayout.Label("🤖 Tự Động: " + defTagName, EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(24));
+                    GUI.backgroundColor = new Color(0.18f, 0.55f, 0.90f);
+                    GUILayout.Label($"<color=#FFFFFF><b>🤖 Tự Động: {defTagName}</b></color>", EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(26));
                 }
                 else
                 {
-                    GUI.backgroundColor = new Color(0.22f, 0.75f, 0.42f);
+                    GUI.backgroundColor = new Color(0.15f, 0.65f, 0.35f);
                     string summary = GetSelectedTagsSummary(cfg.SelectedTags);
-                    GUILayout.Label(summary, EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(24));
+                    GUILayout.Label($"<color=#FFFFFF><b>{summary}</b></color>", EditorStyles_BadgeBox(), GUILayout.Width(350), GUILayout.Height(26));
                 }
                 GUI.backgroundColor = Color.white;
 
                 GUILayout.FlexibleSpace();
 
                 // Nút mở chọn nhiều Tag
-                GUI.backgroundColor = new Color(0.95f, 0.8f, 0.25f);
-                if (GUILayout.Button("🎯 Chọn Tag ▾", GUILayout.Width(135), GUILayout.Height(24)))
+                GUI.backgroundColor = new Color(0.95f, 0.75f, 0.15f);
+                if (GUILayout.Button("🎯 Chọn Tag ▾", GUILayout.Width(130), GUILayout.Height(26)))
                 {
                     activeContainerIdForSelection = id;
-                    activeContainerNameForSelection = ni.DisplayName;
+                    activeContainerNameForSelection = cleanRawName + (ni.TotalTabs > 1 ? $" [Tab {ni.TabIndex}]" : "");
                 }
                 GUI.backgroundColor = Color.white;
 
                 // Nút nhanh: Tự động
-                if (GUILayout.Button("🤖 Auto", GUILayout.Width(60), GUILayout.Height(24)))
+                GUI.backgroundColor = new Color(0.25f, 0.65f, 0.95f);
+                if (GUILayout.Button("🤖 Auto", GUILayout.Width(62), GUILayout.Height(26)))
                 {
                     cfg.IsAuto = true;
                     cfg.IsLocked = false;
                     SaveAssignments();
                 }
+                GUI.backgroundColor = Color.white;
 
                 // Nút nhanh: Khóa / Mở khóa
                 if (cfg.IsLocked)
                 {
-                    GUI.backgroundColor = new Color(0.4f, 0.9f, 0.4f);
-                    if (GUILayout.Button("🔓 Mở", GUILayout.Width(60), GUILayout.Height(24)))
+                    GUI.backgroundColor = new Color(0.35f, 0.85f, 0.45f);
+                    if (GUILayout.Button("🔓 Mở", GUILayout.Width(62), GUILayout.Height(26)))
                     {
                         cfg.IsLocked = false;
                         SaveAssignments();
@@ -549,8 +684,8 @@ public class SmartCategorySortController : MonoBehaviour
                 }
                 else
                 {
-                    GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
-                    if (GUILayout.Button("⛔ Khóa", GUILayout.Width(60), GUILayout.Height(24)))
+                    GUI.backgroundColor = new Color(0.90f, 0.35f, 0.35f);
+                    if (GUILayout.Button("⛔ Khóa", GUILayout.Width(62), GUILayout.Height(26)))
                     {
                         cfg.IsLocked = true;
                         SaveAssignments();
@@ -573,7 +708,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.BeginHorizontal();
 
         // Nút gom và phân loại tất cả
-        GUI.backgroundColor = new Color(0.2f, 0.85f, 0.4f);
+        GUI.backgroundColor = new Color(0.18f, 0.78f, 0.38f);
         if (GUILayout.Button("⚡ GOM & PHÂN LOẠI TOÀN BỘ (F3)", GUILayout.Height(36), GUILayout.Width(380)))
         {
             ExecuteCategorySort();
@@ -581,15 +716,17 @@ public class SmartCategorySortController : MonoBehaviour
         GUI.backgroundColor = Color.white;
 
         // Nút chỉ nén khít chặt
+        GUI.backgroundColor = new Color(0.25f, 0.60f, 0.85f);
         if (GUILayout.Button("🔄 Nén Khít Tất Cả (Xoay 90°)", GUILayout.Height(36), GUILayout.Width(270)))
         {
             SortAllInventories();
         }
+        GUI.backgroundColor = Color.white;
 
         GUILayout.FlexibleSpace();
 
         // Nút đóng menu
-        GUI.backgroundColor = new Color(0.9f, 0.4f, 0.4f);
+        GUI.backgroundColor = new Color(0.85f, 0.30f, 0.30f);
         if (GUILayout.Button("❌ Đóng (F2)", GUILayout.Height(36), GUILayout.Width(130)))
         {
             showMenu = false;
@@ -613,21 +750,19 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.BeginVertical("box");
         GUILayout.BeginHorizontal();
         GUI.color = new Color(1.0f, 0.9f, 0.3f);
-        GUILayout.Label("🎯 CẤU HÌNH NHẬN ĐỒ: " + activeContainerNameForSelection, EditorStyles_BoldLabel(), GUILayout.Width(460));
+        GUILayout.Label("🎯 CẤU HÌNH NHẬN ĐỒ: <color=#FFFFFF>" + activeContainerNameForSelection + "</color>", EditorStyles_BoldLabel(), GUILayout.Width(460));
         GUI.color = Color.white;
 
         // Badge đếm số tag đã chọn
         int selCount = cfg.SelectedTags.Count;
-        GUI.color = (selCount > 0) ? new Color(0.4f, 1.0f, 0.5f) : new Color(0.85f, 0.85f, 0.85f);
-        GUILayout.Label($"[Đã chọn: {selCount} / {AllTags.Length} Tag]", EditorStyles_BoldLabel(), GUILayout.Width(170));
-        GUI.color = Color.white;
+        string selBadgeColor = (selCount > 0) ? "#69F0AE" : "#B0BEC5";
+        GUILayout.Label($"<color={selBadgeColor}><b>[Đã chọn: {selCount} / {AllTags.Length} Tag]</b></color>", EditorStyles_BoldLabel(), GUILayout.Width(170));
 
         GUILayout.FlexibleSpace();
 
         // Chỉnh ưu tiên trực tiếp ngay trên trang chọn Tag
-        GUI.color = new Color(1.0f, 0.85f, 0.2f);
-        GUILayout.Label("⭐ Mức Ưu Tiên: " + cfg.Priority, EditorStyles_BoldLabel(), GUILayout.Width(110));
-        GUI.color = Color.white;
+        string prioColor = (cfg.Priority == 1) ? "#FFD700" : (cfg.Priority <= 3) ? "#FFB74D" : (cfg.Priority <= 10) ? "#FFF59D" : "#B0BEC5";
+        GUILayout.Label($"<color={prioColor}><b>⭐ Mức Ưu Tiên: {cfg.Priority}</b></color>", EditorStyles_BoldLabel(), GUILayout.Width(120));
         if (GUILayout.Button("▲", GUILayout.Width(26), GUILayout.Height(22)))
         {
             if (cfg.Priority > 1) { cfg.Priority--; SaveAssignments(); }
@@ -689,16 +824,16 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.Space(6);
 
         // Danh sách dạng lưới 2 cột các Tag (20 Tag chuyên biệt xếp 2 cột + 1 Tag Kho Chung hàng ngang)
-        selectorScrollPos = GUILayout.BeginScrollView(selectorScrollPos, GUILayout.Height(400));
+        selectorScrollPos = GUILayout.BeginScrollView(selectorScrollPos, GUILayout.Height(420));
 
         // 20 Tag đầu tiên (indexes 0..19): hiển thị 10 cặp
         for (int i = 0; i < 20; i += 2)
         {
             GUILayout.BeginHorizontal();
-            DrawTagToggleButton(AllTags[i], cfg, 418f);
+            DrawTagToggleButton(AllTags[i], cfg, 430f);
             if (i + 1 < 20)
             {
-                DrawTagToggleButton(AllTags[i + 1], cfg, 418f);
+                DrawTagToggleButton(AllTags[i + 1], cfg, 430f);
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(2);
@@ -709,7 +844,7 @@ public class SmartCategorySortController : MonoBehaviour
         {
             GUILayout.Space(2);
             GUILayout.BeginHorizontal();
-            DrawTagToggleButton(AllTags[20], cfg, 842f);
+            DrawTagToggleButton(AllTags[20], cfg, 865f);
             GUILayout.EndHorizontal();
         }
 
@@ -721,7 +856,7 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.BeginHorizontal();
 
         GUI.backgroundColor = new Color(0.2f, 0.85f, 0.45f);
-        if (GUILayout.Button("💾 XONG & LƯU CẤU HÌNH (⬅ Quay lại danh sách hòm)", GUILayout.Height(36), GUILayout.Width(540)))
+        if (GUILayout.Button("💾 XONG & LƯU CẤU HÌNH (⬅ Quay lại danh sách hòm)", GUILayout.Height(36), GUILayout.Width(560)))
         {
             SaveAssignments();
             activeContainerIdForSelection = null;
@@ -740,14 +875,14 @@ public class SmartCategorySortController : MonoBehaviour
         GUILayout.EndHorizontal();
     }
 
-    private void DrawTagToggleButton(ItemTagDef tag, ContainerConfig cfg, float width = 418f)
+    private void DrawTagToggleButton(ItemTagDef tag, ContainerConfig cfg, float width = 430f)
     {
         bool isSelected = cfg.SelectedTags.Contains(tag.TagId);
 
         if (isSelected)
         {
-            GUI.backgroundColor = new Color(0.2f, 0.78f, 0.42f);
-            if (GUILayout.Button("✔  " + tag.DisplayName, GUILayout.Height(32), GUILayout.Width(width)))
+            GUI.backgroundColor = GetTagColor(tag.TagId);
+            if (GUILayout.Button("✔  " + tag.DisplayName, EditorStyles_BoldLabel(), GUILayout.Height(32), GUILayout.Width(width)))
             {
                 cfg.SelectedTags.Remove(tag.TagId);
                 cfg.IsAuto = false;
@@ -757,8 +892,8 @@ public class SmartCategorySortController : MonoBehaviour
         }
         else
         {
-            GUI.backgroundColor = new Color(0.26f, 0.28f, 0.32f);
-            if (GUILayout.Button("    " + tag.DisplayName, GUILayout.Height(32), GUILayout.Width(width)))
+            GUI.backgroundColor = new Color(0.22f, 0.25f, 0.30f);
+            if (GUILayout.Button("○  " + tag.DisplayName, GUILayout.Height(32), GUILayout.Width(width)))
             {
                 cfg.SelectedTags.Add(tag.TagId);
                 cfg.IsAuto = false;
@@ -1505,16 +1640,16 @@ public class SmartCategorySortController : MonoBehaviour
         EmporiumEntry emporium = EmporiumEntry.Instance;
         if (emporium != null)
         {
-            AddIfValid(list, seenInvs, "main_inv", "🏢 Kho Tiệm Chính (Bàn Thao Tác)", emporium.invElement, "GENERAL", false);
-            AddIfValid(list, seenInvs, "showcase", "✨ Kệ Kính Trưng Bày", emporium.showcaseElement, "GENERAL", false);
-            AddIfValid(list, seenInvs, "front_box", "📦 Hòm Đồ Trước Quầy", emporium.frontInvinvElement, "GENERAL", false);
-            AddIfValid(list, seenInvs, "back_box", "📦 Hòm Đồ Sau Quầy", emporium.backInvinvElement, "GENERAL", false);
-            AddIfValid(list, seenInvs, "counter_box", "🗄️ Hòm Quầy Thu Ngân", emporium.backInvinvElementCounter, "GENERAL", false);
-            AddIfValid(list, seenInvs, "bazar_left", "🏪 Hòm Chợ Trái", emporium.bazarLeftinvElement, "GENERAL", false);
-            AddIfValid(list, seenInvs, "afterhour", "🌙 Kho Ngoài Giờ", emporium.afterhourInventory, "GENERAL", false);
+            AddIfValid(list, seenInvs, "main_inv", "🏢 Kho Tiệm Chính (Bàn Thao Tác)", emporium.invElement, "GENERAL", false, false, "Kho Chính", "Kho Tiệm Chính", 0, 1, 1);
+            AddIfValid(list, seenInvs, "showcase", "✨ Kệ Kính Trưng Bày", emporium.showcaseElement, "GENERAL", false, false, "Kệ Kính", "Kệ Kính Trưng Bày", 0, 1, 1);
+            AddIfValid(list, seenInvs, "front_box", "📦 Hòm Đồ Trước Quầy", emporium.frontInvinvElement, "GENERAL", false, false, "Trước Quầy", "Hòm Đồ Trước Quầy", 0, 1, 1);
+            AddIfValid(list, seenInvs, "back_box", "📦 Hòm Đồ Sau Quầy", emporium.backInvinvElement, "GENERAL", false, false, "Sau Quầy", "Hòm Đồ Sau Quầy", 0, 1, 1);
+            AddIfValid(list, seenInvs, "counter_box", "🗄️ Hòm Quầy Thu Ngân", emporium.backInvinvElementCounter, "GENERAL", false, false, "Quầy Thu Ngân", "Hòm Quầy Thu Ngân", 0, 1, 1);
+            AddIfValid(list, seenInvs, "bazar_left", "🏪 Hòm Chợ Trái", emporium.bazarLeftinvElement, "GENERAL", false, false, "Chợ Trái", "Hòm Chợ Trái", 0, 1, 1);
+            AddIfValid(list, seenInvs, "afterhour", "🌙 Kho Ngoài Giờ", emporium.afterhourInventory, "GENERAL", false, false, "Ngoài Giờ", "Kho Ngoài Giờ", 0, 1, 1);
 
             // Kho Lậu / Hòm Ẩn: Luôn mặc định Khóa
-            AddIfValid(list, seenInvs, "hidden_stash", "🕵️ Kho Lậu / Hòm Ẩn", emporium.hiddenElement, "CONTRABAND", false);
+            AddIfValid(list, seenInvs, "hidden_stash", "🕵️ Kho Lậu / Hòm Ẩn", emporium.hiddenElement, "CONTRABAND", false, false, "Kho Lậu", "Kho Lậu / Hòm Ẩn", 0, 1, 1);
         }
 
         // 1. Quét sâu các món đồ là hòm/túi (containers) đặt trong TẤT CẢ các kho tiệm TRƯỚC TIÊN
@@ -1600,7 +1735,7 @@ public class SmartCategorySortController : MonoBehaviour
                             string tabSuffix = storages.Count > 1 ? (" [Tab " + (sIdx + 1) + "/" + storages.Count + "]") : "";
                             string tabId = storages.Count > 1 ? (id + "_tab" + (sIdx + 1)) : id;
                             string displayName = statusPrefix + it.name + tabSuffix + " (#" + shortUid + ")" + statusSuffix;
-                            AddIfValid(list, seenInvs, tabId, displayName, ggi, defTag, true);
+                            AddIfValid(list, seenInvs, tabId, displayName, ggi, defTag, true, isOpen, entry.locationName, it.name, shortUid, sIdx + 1, storages.Count);
                         }
                     }
                 }
@@ -1646,7 +1781,7 @@ public class SmartCategorySortController : MonoBehaviour
                             string tabSuffix = storages.Count > 1 ? (" [Tab " + (sIdx + 1) + "/" + storages.Count + "]") : "";
                             string tabId = storages.Count > 1 ? (id + "_tab" + (sIdx + 1)) : id;
                             string displayName = "🔓 " + rawName + tabSuffix + " (#" + shortUid + ") [Đang Mở]";
-                            AddIfValid(list, seenInvs, tabId, displayName, ggi, defTag, true);
+                            AddIfValid(list, seenInvs, tabId, displayName, ggi, defTag, true, true, "Đang Mở", rawName, shortUid, sIdx + 1, storages.Count);
                         }
                     }
                 }
@@ -1657,7 +1792,7 @@ public class SmartCategorySortController : MonoBehaviour
         return list;
     }
 
-    private void AddIfValid(List<NamedInventory> list, HashSet<GameGridInventory> seen, string id, string name, GameGridInventory inv, string defTag, bool hasId)
+    private void AddIfValid(List<NamedInventory> list, HashSet<GameGridInventory> seen, string id, string name, GameGridInventory inv, string defTag, bool hasId, bool isOpen = false, string locationName = "", string rawName = "", int shortUid = 0, int tabIdx = 1, int totalTabs = 1)
     {
         if (inv != null && inv.inventoryShape != null && inv.inventoryShape.width > 0 && inv.inventoryShape.height > 0)
         {
@@ -1670,6 +1805,12 @@ public class SmartCategorySortController : MonoBehaviour
             ni.Inventory = inv;
             ni.DefaultTagId = defTag;
             ni.HasId = hasId;
+            ni.IsOpen = isOpen;
+            ni.LocationName = locationName;
+            ni.RawName = !string.IsNullOrEmpty(rawName) ? rawName : name;
+            ni.ShortUid = shortUid;
+            ni.TabIndex = tabIdx;
+            ni.TotalTabs = totalTabs;
             list.Add(ni);
         }
     }
@@ -1799,19 +1940,43 @@ public class SmartCategorySortController : MonoBehaviour
         return "🎯 " + shortNames.Count + " Tag: " + shortNames[0] + ", " + shortNames[1] + ", " + shortNames[2] + " +" + (shortNames.Count - 3);
     }
 
+    private static GUIStyle styleLabel = null;
+    private static GUIStyle styleBoldLabel = null;
+    private static GUIStyle styleBadgeBox = null;
+
+    private static GUIStyle EditorStyles_Label()
+    {
+        if (styleLabel == null)
+        {
+            styleLabel = new GUIStyle(GUI.skin.label);
+            styleLabel.richText = true;
+            styleLabel.alignment = TextAnchor.MiddleLeft;
+        }
+        return styleLabel;
+    }
+
     private static GUIStyle EditorStyles_BoldLabel()
     {
-        GUIStyle style = new GUIStyle(GUI.skin.label);
-        style.fontStyle = FontStyle.Bold;
-        return style;
+        if (styleBoldLabel == null)
+        {
+            styleBoldLabel = new GUIStyle(GUI.skin.label);
+            styleBoldLabel.richText = true;
+            styleBoldLabel.fontStyle = FontStyle.Bold;
+            styleBoldLabel.alignment = TextAnchor.MiddleLeft;
+        }
+        return styleBoldLabel;
     }
 
     private static GUIStyle EditorStyles_BadgeBox()
     {
-        GUIStyle style = new GUIStyle(GUI.skin.box);
-        style.alignment = TextAnchor.MiddleCenter;
-        style.fontStyle = FontStyle.Bold;
-        style.fontSize = 12;
-        return style;
+        if (styleBadgeBox == null)
+        {
+            styleBadgeBox = new GUIStyle(GUI.skin.box);
+            styleBadgeBox.richText = true;
+            styleBadgeBox.alignment = TextAnchor.MiddleCenter;
+            styleBadgeBox.fontStyle = FontStyle.Bold;
+            styleBadgeBox.fontSize = 12;
+        }
+        return styleBadgeBox;
     }
 }

@@ -3,17 +3,18 @@
   <ID>SmartInventorySort</ID>
   <Name>Sắp Xếp &amp; Phân Loại Kho Thông Minh (Smart Category &amp; Inventory Sort)</Name>
   <Author>Antigravity</Author>
-  <ModVersion>1.6.4</ModVersion>
+  <ModVersion>1.7.0</ModVersion>
   <Description>Bộ công cụ tối ưu hóa kho hàng đa năng:
 1. Phân loại &amp; Gom đồ đa hòm (F2: Mở menu cấu hình hòm, F3: Gom &amp; Phân loại nhanh):
-- Hỗ trợ chuẩn hệ thống Giấy phép (Permits) cuối game: Tách biệt hoàn toàn hạng cấm (RESTRICTED_1/2/3) khỏi tag Hàng Cấm (CONTRABAND).
-- Tích hợp PermitHelper.HavePermit() vào Master Isolation Shield: Tự động xóa tag CONTRABAND cho mọi vật phẩm đã có giấy phép hợp pháp (như súng Sentinel Mk. III, đạn, hóa chất, y tế), giúp đồ đi thẳng vào hòm chuyên biệt tương ứng và không bao giờ bị ném nhầm vào Hòm Hàng Cấm.
+- Đại tu toàn diện giao diện F2 (v1.7.0): Trực quan hóa đa sắc (Rich Text), phân cấp thuộc tính trực quan.
+- Tự động ưu tiên xếp hòm ĐANG MỞ lên đỉnh đầu tiên với nhãn [🔓 ĐANG MỞ] màu Neon Green/Emerald phát sáng, đổi màu nền card riêng giúp tìm thấy ngay lập tức.
+- Phân cấp sắp xếp khoa học: Hòm đang mở -> Mức ưu tiên (Priority 1..99) -> Vị trí trong kho (LocationName: Kho Chính, Hòm Sau, Quầy Thu Ngân...) -> Tên hòm.
+- Nhãn Vị Trí Kho [📍 Kho: ...] màu Cyan ngọc bích giúp nhận biết ngay hòm đang nằm trong kho nào của cửa hàng.
+- Bảng chọn Tag (Trang 2) rực rỡ với màu sắc chủ đạo riêng biệt theo từng nhóm vật phẩm (Súng: Cam, Y tế: Hồng, Hóa chất: Tím, Hàng cấm: Đỏ tươi, Nông sản: Xanh lá...).
+- Hỗ trợ chuẩn hệ thống Giấy phép (Permits) cuối game: Tách biệt hoàn toàn hạng cấm (RESTRICTED_1/2/3) khỏi tag Hàng Cấm (CONTRABAND), bảo vệ vũ khí đã hợp pháp hóa.
 - Khắc phục triệt để lỗi gói hạt giống nhảy nhầm vào hòm đang mở: Loại bỏ STORABLE_PACKAGE_TAG khỏi danh mục CONTAINER, mở rộng nhận diện SEED và bổ sung bảo vệ chéo Master Isolation Shield cho SEED/FOOD/MEDICAL/DRINK.
 - Bảo toàn ID bền vững cho hòm đang mở: Quét container kho tiệm trước tiên để giữ nguyên ID gốc (box_..._uniqueId) cùng cấu hình người chơi đã cài đặt, tránh tình trạng khi mở hòm bị sinh ID tạm box_hash_... làm mất cấu hình.
 - Khắc phục triệt để lỗi hòm Hóa chất (CHEMICAL) gom nhầm Thực phẩm và Y tế qua Master Isolation Shield.
-- Tối ưu hóa UI: Giao diện card thoáng đãng, lưới chọn tag 2 cột cân xứng 418px + ô Kho Chung toàn màn hình, nút bấm to rõ 32px, hiển thị badge màu trực quan.
-- Bổ sung danh mục Tag Hóa Chất (CHEMICAL) bao quát toàn bộ hóa chất, axit, clo, độ tinh khiết hóa học theo chuẩn game.
-- Tinh gọn &amp; Hợp nhất thông minh các nhóm tag liên quan (Súng &amp; Phụ kiện, Đạn &amp; Thuốc nổ, Nước &amp; Bộ lọc, Rượu &amp; Thuốc lá, Mô-đun &amp; Pin, Tài liệu &amp; Vé số, Gia dụng &amp; Nghệ thuật), giữ riêng Hàng cấm và Chất gây nghiện.
 - Tận dụng 100% API gốc của game: Quét chuẩn xác toàn bộ Tab khi hòm nâng cấp từ 1 tab lên 2 tab (MachineryTabs), hiển thị riêng từng Tab [Tab 1/2], [Tab 2/2] trên menu F2.
 - Quét đệ quy hòm lồng trong hòm: Sử dụng GameItem.FindAllChildItems() tự động lấy sạch đồ nằm trong các hòm con bên trong kho hòm mở rộng.
 - Cơ chế 1 hòm chọn nhiều Tag (Multi-Tag Selection) + Thứ tự ưu tiên (Priority 1..99).
